@@ -43,12 +43,13 @@
 jQuery(function(){
 	$('.tagger').each(function(i){
 		$(this).data('name', $(this).attr('name'));		
-		var b = $('<button type="button" />').html('Add').addClass('tagAdd')
+		var b = $('<button type="button" class="positive" />').html('<img src="add.png" /> Add').addClass('tagAdd')
 			.click(function(){
 				var tagger = $(this).data('tagger');
 				$(tagger).addTag( $(tagger).val() ).val('');
 			})
 			.data('tagger', this);
+        b = $('<div class="buttons"></div>').html(b);
 		var l = $('<ul />').addClass('tagList');
 		$(this).data('list', l).after(l).after(b);
 	})

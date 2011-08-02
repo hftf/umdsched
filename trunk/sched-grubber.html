@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Schedule grubber</title>
+<link rel="stylesheet" type="text/css" href="buttons.css" />
+<script type="text/javascript" src="sched-grubber.js"></script>
+</head>
+<body>
+<div id="sched-grubber">
+<h3>Instructions</h3>
+<ol>
+<li><a href="http://my.umd.edu" target="_blank">Log into MyUM.</a></li>
+<li><a href="https://my.umd.edu/portal/server.pt/gateway/PTARGS_6_0_257_207_86027_43/" target="_blank">View your courses.</a></li>
+<li>Copy the text under "Registered Courses" and above "Waitlist/Hold File Courses".</li>
+<li>Paste the copied text into the input box below.</li>
+<li>Click the "Parse" button, and copy the text in the prompt.</li>
+</ol>
+<textarea id="sched-input" rows="9" cols="90">
+Course	Section	Title	Credits
+CMSC132	0102	OBJECT-ORIENTED PROG II	4.00
+CPSP118D	0102	SCIENCE,DISCOV&amp;UNIVERSE	1.00
+MATH241	0412	CALCULUS III	4.00
+PHYS174	0103	PHYSICS LAB INTRO	1.00
+PHYS272	0101	INTRO PHYS:FIELDS	3.00</textarea>
+<p class="buttons"><button id="sched-parse-button" onclick="parsePrompt();"><img src="page_white_lightning.png" /> Parse</button></p>
+</div>
+</body>
+</html>
