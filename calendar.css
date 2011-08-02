@@ -116,3 +116,4 @@ ol.formatted li {
 #edit_schedules > div { margin: 0 8px; padding: 4px 0 4px 8px; }
 .sample_schedules dt { width: 6em; float: left; clear: left; }
 .sample_schedules dd { font: 0.8em monospace; margin-left: 6em; margin-bottom: 5px; }
+.wc-title a { text-decoration: underline !important; color: rgba(0, 0, 0, 0.6) !important }

@@ -28,12 +28,17 @@ function sectionToEvents($section, $course, $n = 0) {
     }
     return $events;
 }
+
+
 function sectionDesc($meeting, $section, $course) {
     $location = $meeting->location_bldg . (($meeting->location_room) ? ' ' . $meeting->location_room : '');
     if ($meeting->location_url)
         $location = '<a href="' . $meeting->location_url . '">' . $location . '</a>';
 
-    $str = '<span class="course-section"><span class="course-dept-num">' . $course->dept . $course->number . '</span>&nbsp; <span class="section-num">' . $section->number . (($meeting->type) ? ' <span class="meeting-type">' . $meeting->type . '</span>' : '') . '<br />' .
+    $testudo_base_url = 'http://www.sis.umd.edu/bin/soc?term=201108';
+    $course_url = $testudo_base_url . '&crs=' . $course->dept . $course->number;
+    $section_url = $testudo_base_url . '&crs=' . $course->dept . $course->number . '&sec=' . $section->number;
+    $str = '<span class="course-section"><a class="course-dept-num" href="' . $course_url . '">' . $course->dept . $course->number . '</a>&nbsp; <a class="section-num" href="' . $section_url . '">' . $section->number . (($meeting->type) ? ' <span class="meeting-type">' . $meeting->type . '</span>' : '') . '</a></span><br />' .
            '<abbr class="course-title" title="' . $course->title . '">' . $course->title . '</abbr><br />' . 
            '<span class="location">' . $location . '</span>';
     return $str;
