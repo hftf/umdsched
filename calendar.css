@@ -113,6 +113,6 @@ ol.formatted li {
 }
 #calendar { width: 74%; float: left; }
 #edit_schedules { width: 26%; float: left; }
-#edit_schedules > div { margin: 0 8px; padding: 4px 8px; }
+#edit_schedules > div { margin: 0 8px; padding: 4px 0 4px 8px; }
 .sample_schedules dt { width: 6em; float: left; clear: left; }
 .sample_schedules dd { font: 0.8em monospace; margin-left: 6em; margin-bottom: 5px; }

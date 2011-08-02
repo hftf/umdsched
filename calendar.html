@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="calendar.css" />
     <link rel="stylesheet" type="text/css" href="jquery-tagger/tagger.css" />
     <link rel="stylesheet" type="text/css" href="jquery-week-calendar/skins/default.css" />
+    <link rel="stylesheet" type="text/css" href="buttons.css" />
     
     <script type="text/javascript" src="jquery-week-calendar/libs/jquery-1.4.4.min.js"></script>
     <script type="text/javascript" src="jquery-week-calendar/libs/jquery-ui-1.8.11.custom.min.js"></script>
@@ -22,6 +23,7 @@
     <script type="text/javascript" src="jquery-tagger/jquery.tagger.js"></script>
     <script type="text/javascript" src="str-utils.js"></script>
     <script type="text/javascript" src="calendar.js"></script>
+    <script type="text/javascript" src="sched-grubber.js"></script>
 </head>
 <body>
     <!--
@@ -48,23 +50,23 @@
             <h3>Instructions</h3>
             <ol class="formatted">
                 <li>Delete the example courses by clicking "Empty schedule" below.</li>
-                <li>Access <a href="http://www.testudo.umd.edu/apps/ssched/">your schedule</a> on Testudo.</li>
-                <li>Enter your courses in the format <code>DEPT123 0101</code>, where <code>DEPT123</code> is the department code and course number, and <code>0101</code> is the section number. You may enter multiple sections separated by commas.</li>
+                <li>Access <a href="http://www.testudo.umd.edu/apps/ssched/">your schedule</a> on Testudo and enter your courses manually, or <span style="background: #FF9; padding: 0 1px;">use the automatic <a id="grubber-link" href="sched-grubber.html">schedule grubber</a>.</span></li>
                 <li>To share your schedule, click "Serialize schedule" and copy the text in the window.</li>
             </ol>
             <div class="edit_schedule">
                 <h3>Edit schedule</h3>
-                <p><input type="text" class="tagger" name="sched1[]" id="sched1" /></p>
+                <p>Format: <code>DEPT123 0101</code>, where <code>DEPT123</code> is the department code and course number, and <code>0101</code> is the section number. You may enter multiple sections separated by commas.</p>
+                <p><input type="text" class="tagger" name="sched1[]" id="sched1" style="padding: 3px;" /></p>
             </div>
-            <p style="clear: both;">
-                <button id="refresh_calendar_button">Refresh calendar</button><br />
-                <button id="empty_schedule_button">Empty schedule</button><br />
-                <button id="serialize_schedule_button">Serialize schedule</button>
+            <p style="clear: both;" class="buttons nofloat">
+                <button id="refresh_calendar_button" class="positive"><img src="arrow_refresh.png" /> Refresh calendar</button>
+                <button id="empty_schedule_button" class="negative"><img src="delete.png" /> Empty schedule</button>
+                <button id="serialize_schedule_button"><img src="barcode.png" /> Serialize schedule</button>
             </p>
             <h3>Sample schedules</h3>
             <dl class="sample_schedules">
                 <dt>Ophir</dt>
-                <dd><a href="#">LING200 0101, PHYS272 0101, PHYS174 0103, CPSP118D 0102, CMSC132 0101, MATH241 0412</a></dd>
+                <dd><a href="#" id="ophir">MATH241 0412, PHYS272 0101, PHYS174 0103, CPSP118D 0102, CMSC132 0102, LING200 0101</a></dd>
                 <dt>Bae</dt>
                 <dd><a href="#">MATH340 0101, PHIL209I 0102, PHYS174 0108, PHYS272H 0101, GEMS100 0401, ECON200 2305</a></dd>
                 <dt>Nitay</dt>

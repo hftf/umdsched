@@ -1,6 +1,5 @@
 $(document).ready(function() {
-    $('#sched1').addTag('LING200 0101,PHYS272 0101,PHYS174 0103,CPSP118D 0102,CMSC132 0101,MATH241 0412');
-    //ASTR120 0101
+    $('#sched1').addTag(document.getElementById('ophir').innerText);
 
     var $calendar = $('#calendar');
     var id = 10;
@@ -275,6 +274,11 @@ $(document).ready(function() {
         $('#sched1').data('list').find('li').click();
         $("#sched1").addTag($(this).html());
         $('#refresh_calendar_button').click();
+        return false;
+    });
+    
+    $('#grubber-link').click(function() {
+        $('<div></div>').load('sched-grubber.html #sched-grubber').dialog({ title: "Schedule grubber", width: 690 });
         return false;
     });
 
