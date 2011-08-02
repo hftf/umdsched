@@ -1,0 +1,6 @@
+fieldset { border: 0; }
+.tagger { float: left; }
+.tagAdd { margin: 0 0 0 6px; }
+.tagList { list-style: none; padding: 0; margin: 0; clear: both; border-left: 3px solid #ddd; padding-left: 4px; float: left; margin: 5px 10px; }
+.tagName { cursor: pointer; float: left; clear: both; padding: 0.1em 1.5em 0.1em 0.4em; }
+.tagName:hover { background: #efefef url(bullet_toggle_minus.png) right 2px no-repeat; -moz-border-radius: 4px; }
