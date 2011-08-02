@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Interactive UMD schedule editor</title>
+    <link rel="stylesheet" type="text/css" href="reset.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-week-calendar/libs/css/smoothness/jquery-ui-1.8.11.custom.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-week-calendar/jquery.weekcalendar.css" />
+    <link rel="stylesheet" type="text/css" href="calendar.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-tagger/tagger.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-week-calendar/skins/default.css" />
+    
+    <script type="text/javascript" src="jquery-week-calendar/libs/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="jquery-week-calendar/libs/jquery-ui-1.8.11.custom.min.js"></script>
+    <script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            //$('#switcher').themeswitcher();
+        });
+    </script>
+    <script type="text/javascript" src="jquery-week-calendar/libs/date.js"></script>
+    <script type="text/javascript" src="jquery-week-calendar/jquery.weekcalendar.js"></script>
+    <script type="text/javascript" src="jquery-tagger/jquery.tagger.js"></script>
+    <script type="text/javascript" src="str-utils.js"></script>
+    <script type="text/javascript" src="calendar.js"></script>
+</head>
+<body>
+    <!--
+    <h1>My schedules</h1>
+    <div id="about_button_container">
+        <div id="switcher"></div>
+        <button type="button" id="edit_schedules_button">Edit schedules</button>
+    </div>-->
+    <div id="calendar"></div>
+    <div id="event_edit_container">
+        <form>
+            <input type="hidden" />
+            <ul>
+                <li><span>Date: </span><span class="date_holder"></span></li>
+                <li><label for="start">Start Time: </label><select name="start"><option value="">Select Start Time</option></select></li>
+                <li><label for="end">End Time: </label><select name="end"><option value="">Select End Time</option></select></li>
+                <li><label for="title">Title: </label><input type="text" name="title" /></li>
+                <li><label for="body">Body: </label><textarea name="body"></textarea></li>
+            </ul>
+        </form>
+    </div>
+    <div id="edit_schedules">
+        <div>
+            <h3>Instructions</h3>
+            <ol class="formatted">
+                <li>Delete the example courses by clicking "Empty schedule" below.</li>
+                <li>Access <a href="http://www.testudo.umd.edu/apps/ssched/">your schedule</a> on Testudo.</li>
+                <li>Enter your courses in the format <code>DEPT123 0101</code>, where <code>DEPT123</code> is the department code and course number, and <code>0101</code> is the section number. You may enter multiple sections separated by commas.</li>
+                <li>To share your schedule, click "Serialize schedule" and copy the text in the window.</li>
+            </ol>
+            <div class="edit_schedule">
+                <h3>Edit schedule</h3>
+                <p><input type="text" class="tagger" name="sched1[]" id="sched1" /></p>
+            </div>
+            <p style="clear: both;">
+                <button id="refresh_calendar_button">Refresh calendar</button><br />
+                <button id="empty_schedule_button">Empty schedule</button><br />
+                <button id="serialize_schedule_button">Serialize schedule</button>
+            </p>
+            <h3>Sample schedules</h3>
+            <dl class="sample_schedules">
+                <dt>Ophir</dt>
+                <dd><a href="#">LING200 0101, PHYS272 0101, PHYS174 0103, CPSP118D 0102, CMSC132 0101, MATH241 0412</a></dd>
+                <dt>Bae</dt>
+                <dd><a href="#">MATH340 0101, PHIL209I 0102, PHYS174 0108, PHYS272H 0101, GEMS100 0401, ECON200 2305</a></dd>
+                <dt>Nitay</dt>
+                <dd><a href="#">MATH241 0211, ASTR120 0101, SOCY100 0501, PHYS272H 0101, CPSP118D 0102, PHYS174 0101</a></dd>
+                <dt>James</dt>
+                <dd><a href="#">ARCH170 0107, HIST284 0102, BMGT230B 0205, BMGT110F FP06, BMGT220 0302, CPSP118E 0101</a></dd>
+            </dl>
+        </div>
+    </div>
+
+<!-- Google Analytics Begin -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-8654955-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<!-- Google Analytics End -->
+</body>
+</html>
