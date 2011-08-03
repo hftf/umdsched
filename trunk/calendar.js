@@ -253,6 +253,9 @@ $(document).ready(function() {
             modal: true,
         });
     });
+    $('#wrap_titles_button').click(function() {
+        $(document.body).toggleClass('notitlewrap');
+    });
 
     $("#edit_schedules_button").click(function() {
         $edit_schedules.dialog({

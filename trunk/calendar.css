@@ -70,7 +70,7 @@ ul.formatted,
 ol.formatted {
 	display: block;
 	margin: 1em 0.5em;
-        padding-left: 0;
+    padding-left: 0;
 }
 
 ul.formatted li,
@@ -112,6 +112,10 @@ ol.formatted li {
     text-overflow: ellipsis;
     width: 100%;*/
     border-bottom: 1px dotted rgba(17,17,17,0.6);
+}
+.notitlewrap .course-title {
+    overflow: hidden;
+    white-space: normal;
 }
 .course-dept-num {
     font-weight: bold;
