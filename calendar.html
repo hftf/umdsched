@@ -59,9 +59,10 @@
                 <p><input type="text" class="tagger" name="sched1[]" id="sched1" style="padding: 3px;" /></p>
             </div>
             <p style="clear: both;" class="buttons nofloat">
-                <button id="refresh_calendar_button" class="positive"><img src="inc/img/silk/arrow_refresh.png" /> Refresh calendar</button>
-                <button id="empty_schedule_button" class="negative"><img src="inc/img/silk/delete.png" /> Empty schedule</button>
-                <button id="serialize_schedule_button"><img src="inc/img/fugue/barcode.png" /> Serialize schedule</button>
+                <button id="refresh_calendar_button" class="positive" accesskey="r"><img src="inc/img/silk/arrow_refresh.png" /> <u>R</u>efresh calendar</button>
+                <button id="empty_schedule_button" class="negative" accesskey="e"><img src="inc/img/silk/delete.png" /> <u>E</u>mpty schedule</button>
+                <button id="serialize_schedule_button" accesskey="s"><img src="inc/img/fugue/barcode.png" /> <u>S</u>erialize schedule</button>
+                <input id="wrap_titles_button" type="checkbox" accesskey="w" /> <label for="wrap_titles_button"><u>W</u>rap long course titles</label>
             </p>
             <h3>Sample schedules</h3>
             <dl class="sample_schedules">
