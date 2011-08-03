@@ -1,5 +1,7 @@
 <?php
 
+include 'models/models.php';
+
 class umd_api {
     public function __construct() {
         //configuration settings
@@ -84,6 +86,8 @@ class umd_api {
                 $course_intro_html = substr($course_html, 0, $course_intro_end_pos);
                 preg_match('#<b>([A-Z]{4})([^ ]+?) ?</b>.*?\n<b>(.*?);</b>\n<b> ?\((.*?) credits?\)</b>\n#si', $course_intro_html, $course_intro_array);
                 
+                $course_url = $this->schedule_base . '?term=' . $year . $term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
+                
                 $section_delimiter = "<dl>"; // "*" appears directly after
                 $section_delimiter_pos = strpos($course_html, $section_delimiter, $course_intro_end_pos);
                 
@@ -98,6 +102,12 @@ class umd_api {
                         $section_intro_end_pos = strpos($section_html, $section_intro_end) + strlen($section_intro_end);
                         $section_intro_html = substr($section_html, 0, $section_intro_end_pos);
                         preg_match('#\n(.+)\((.+)\)\n(.*?) \((.*?)\)#si', $section_intro_html, $section_intro_array);
+                        
+                        $section_url = $course_url . '&sec=' . $section_intro_array[1];
+                        
+                        // TODO: Add support for multiple instructors
+                        $instructor = $section_intro_array[3];
+                        preg_match('#(<a href = "(.*?)">\s*)?(.*?)(</a>)?$#si', $instructor, $instructor_array);
                         
                         $meeting_delimiter = '<dd>';
                         $meeting_delimiter_pos = strpos($section_html, $meeting_delimiter, $section_intro_end_pos);
@@ -120,12 +130,12 @@ class umd_api {
                             }
                         }
                         
-                        $section = new Section($section_intro_array[1], $section_intro_array[2], $section_intro_array[4], str_replace("\n", ' ', $section_intro_array[3]), $meetings);
+                        $section = new Section($section_intro_array[1], $section_intro_array[2], $section_intro_array[4], $section_url, $instructor_array[3], $instructor_array[2], $meetings);
                         $sections[] = $section;
                     }
                 }
 
-                $course = new Course($course_intro_array[1], $course_intro_array[2], str_replace("\n", ' ', $course_intro_array[3]), $course_intro_array[4], $sections);
+                $course = new Course($course_intro_array[1], $course_intro_array[2], str_replace("\n", ' ', $course_intro_array[3]), null, $course_url, $course_intro_array[4], $sections);
                 $courses[] = $course;
             }
 
@@ -145,80 +155,4 @@ class umd_api {
     }
 }
 
-class Department {
-    public $url;
-    public $code;
-    public $name;
-    public $college_name; // Combine?
-    public $college_url;
-    
-    public $courses;
-    
-    public function __construct($code, $name, $courses = null, $url = null, $college_name = null, $college_url = null) {
-        $this->url = $url;
-        $this->code = $code;
-        $this->name = $name;
-        $this->college_name = $college_name;
-        $this->college_url = $college_url;
-        $this->courses = $courses;
-    }
-}
-
-class Course {
-    public $dept;
-    public $number;
-    public $title;
-    public $credits;
-    
-    public $sections;
-    
-    public function __construct($dept, $number, $title, $credits, $sections = null) {
-        $this->dept = $dept;
-        $this->number = $number;
-        $this->title = $title;
-        $this->credits = $credits;
-        $this->sections = $sections;
-    }
-}
-
-class Section {
-    public $number;
-    public $crn;
-    public $status;
-    public $instructor;
-    //public $instructor_name; // Combine?
-    //public $instructor_url;
-    
-    public $meetings;
-    
-    public function __construct($number, $crn, $status, $instructor, $meetings = null) {
-        $this->number = $number;
-        $this->crn = $crn;
-        $this->status = $status;
-        $this->instructor = $instructor;
-        //$this->instructor_name = $instructor_name;
-        //$this->instructor_url = $instructor_url;
-        $this->meetings = $meetings;
-    }
-}
-
-class Meeting {
-    public $days;
-    public $time_start;
-    public $time_end;
-    public $type;
-    public $location_url; // Combine?
-    public $location_bldg;
-    public $location_room;
-    
-    public function __construct($days, $time_start, $time_end, $location_url, $location_bldg, $location_room, $type) {
-        $this->days = $days;
-        $this->time_start = $time_start;
-        $this->time_end = $time_end;
-        $this->location_url = $location_url;
-        $this->location_bldg = $location_bldg;
-        $this->location_room = $location_room;
-        $this->type = $type;
-    }
-}
 ?>
