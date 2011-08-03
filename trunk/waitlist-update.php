@@ -21,14 +21,24 @@ if (isset($_POST['waitlist-update-button'])) {
 
     include 'umd-api.php';
     $umd_api = new umd_api;
+
+    include "../inc/db.php";
+    mysql_select_db("umd_waitlist");
+    mysql_query("SET NAMES 'utf8'");
+
+    if (isset($_GET['all']) && empty($requests)) {
+        $requests = array();
+        $query = 'SELECT * FROM waitlist_samples WHERE year = "' . date('Y') . '" AND term = "' . $umd_api->get_term() . '" GROUP BY year, term, dept';
+        $result = mysql_query($query);
+        while ($section = mysql_fetch_assoc($result))
+            $requests[] = array('dept' => $section['dept'], 'sec' => null);
+    }
+
     $schedules = $umd_api->get_schedules(json_decode(json_encode($requests)), 'object');
     
     if (empty($schedules))
         echo 'Error: Invalid information entered.';
     else {
-        include "../inc/db.php";
-        mysql_select_db("umd_waitlist");
-        mysql_query("SET NAMES 'utf8'");
         $query = 'INSERT INTO waitlist_samples (year, term, dept, course_number, section, status, seats, open, waitlist, remote_addr, datetime) VALUES' . "\n";
         $inserts = array();
         foreach ($schedules as $dept) {
@@ -46,7 +56,7 @@ if (isset($_POST['waitlist-update-button'])) {
 }
 
 ?>
-<form id="waitlist-update" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+<form id="waitlist-update" action="<?php echo $_SERVER['PHP_SELF'] . '?' . $_SERVER['QUERY_STRING']; ?>" method="post">
 <h3>Instructions</h3>
 <ol>
 <li>Enter at least one course (or section).</li>
