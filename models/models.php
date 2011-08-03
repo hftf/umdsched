@@ -61,11 +61,13 @@ class Status {
     var $seats;
     var $open;
     var $waitlist;
+    var $orig_string;
     
-    function __construct($seats, $open, $waitlist) {
+    function __construct($seats, $open, $waitlist, $orig_string = null) {
         $this->seats = $seats;
         $this->open = $open;
         $this->waitlist = $waitlist;
+        $this->orig_string = $orig_string;
     }
 }
 

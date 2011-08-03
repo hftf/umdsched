@@ -101,6 +101,9 @@ ol.formatted li {
 .wc-title {
     color: #111;
 }
+.status {
+    color: rgba(81,81,81,0.6);
+}
 .course-title {
     font-size: 0.9em;
     overflow: hidden;
