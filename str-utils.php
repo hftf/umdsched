@@ -40,10 +40,11 @@ function sectionDesc($meeting, $section, $course) {
     $section_ = $section->number;
     if ($section->url)
         $section_ = '<a href="' . $section->url . '">' . $section_ . '</a>';
+    $status = ($section->status->open != 0) ? ($section->status->seats - $section->status->open) . '/' . $section->status->seats : 'Full (' . $section->status->waitlist . ')';
 
     $str = '<span class="course-section">' . $course_ . '&nbsp; <span class="section-num">' . $section_ . (($meeting->type) ? ' <span class="meeting-type">' . $meeting->type . '</span>' : '') . '</span></span><br />' .
            '<abbr class="course-title" title="' . $course->title . '">' . $course->title . '</abbr><br />' . 
-           '<span class="location">' . $location . '</span>';
+           '<span class="location">' . $location . '</span> <span class="status">' . $status . '</span>';
     return $str;
 }
 

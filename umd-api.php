@@ -104,10 +104,10 @@ class umd_api {
                         preg_match('#\n(.+)\((.+)\)\n(.*?) \((.*?)\)#si', $section_intro_html, $section_intro_array);
                         
                         $section_url = $course_url . '&sec=' . $section_intro_array[1];
-                        
+                        preg_match('#(FULL: )?Seats=(\d+), Open=(\d+), Waitlist=(\d+)#si', $section_intro_array[4], $status_array);
+                        $status = new Status($status_array[2], $status_array[3], $status_array[4]);
                         // TODO: Add support for multiple instructors
-                        $instructor = $section_intro_array[3];
-                        preg_match('#(<a href = "(.*?)">\s*)?(.*?)(</a>)?$#si', $instructor, $instructor_array);
+                        preg_match('#(<a href = "(.*?)">\s*)?(.*?)(</a>)?$#si', $section_intro_array[3], $instructor_array);
                         
                         $meeting_delimiter = '<dd>';
                         $meeting_delimiter_pos = strpos($section_html, $meeting_delimiter, $section_intro_end_pos);
@@ -130,7 +130,7 @@ class umd_api {
                             }
                         }
                         
-                        $section = new Section($section_intro_array[1], $section_intro_array[2], $section_intro_array[4], $section_url, $instructor_array[3], $instructor_array[2], $meetings);
+                        $section = new Section($section_intro_array[1], $section_intro_array[2], $status, $section_url, $instructor_array[3], $instructor_array[2], $meetings);
                         $sections[] = $section;
                     }
                 }
