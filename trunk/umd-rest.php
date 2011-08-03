@@ -2,7 +2,6 @@
 
 include 'rest-utils.php';
 include 'umd-api.php';
-include 'str-utils.php';
 
 $request = RestUtils::processRequest();
 
@@ -16,21 +15,7 @@ switch ($request->getMethod()) {
         
         switch ($model) {
             case 'course':
-                $data = array();
-                if ($request->getData()) {
-                    foreach ($request->getData() as $i => $data_i) {
-                        $year = isset($data_i->year) ? $data_i->year : null;
-                        $term = isset($data_i->term) ? $data_i->term : null;
-                        $dept = isset($data_i->dept) ? $data_i->dept : null;
-                        $sec  = isset($data_i->sec)  ? $data_i->sec  : null;
-                        
-                        $new_data = $umd_api->get_schedule($year, $term, $dept, $sec);
-                        if ($format == 'events')
-                            $new_data = sectionToEvents($new_data->courses[0]->sections[0], $new_data->courses[0], $i / count($request->getData()));
-                        
-                        $data = array_merge($data, $new_data);
-                    }
-                }
+                $data = $umd_api->get_schedules($request->getData(), $format);
                 break;
             case 'dept':
                 $year = ($request->getData() && isset($request->getData()->year)) ? $request->getData()->year : null;

@@ -1,6 +1,7 @@
 <?php
 
 include 'models/models.php';
+include 'str-utils.php';
 
 class umd_api {
     public function __construct() {
@@ -84,7 +85,7 @@ class umd_api {
                 $course_intro_end = "</font>\n<br>\n";
                 $course_intro_end_pos = strpos($course_html, $course_intro_end) + strlen($course_intro_end);
                 $course_intro_html = substr($course_html, 0, $course_intro_end_pos);
-                preg_match('#<b>([A-Z]{4})([^ ]+?) ?</b>.*?\n<b>(.*?);</b>\n<b> ?\((.*?) credits?\)</b>\n#si', $course_intro_html, $course_intro_array);
+                preg_match('#<b>([A-Z]{4})([^\s]+?) ?</b>.*?\n<b>(.*?);</b>\n<b> ?\((.*?) credits?\)</b>\n#si', $course_intro_html, $course_intro_array);
                 
                 $course_url = $this->schedule_base . '?term=' . $year . $term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
                 
@@ -105,7 +106,7 @@ class umd_api {
                         
                         $section_url = $course_url . '&sec=' . $section_intro_array[1];
                         preg_match('#(FULL: )?Seats=(\d+), Open=(\d+), Waitlist=(\d+)#si', $section_intro_array[4], $status_array);
-                        $status = new Status($status_array[2], $status_array[3], $status_array[4]);
+                        $status = new Status($status_array[2], $status_array[3], $status_array[4], $section_intro_array[4]);
                         // TODO: Add support for multiple instructors
                         preg_match('#(<a href = "(.*?)">\s*)?(.*?)(</a>)?$#si', $section_intro_array[3], $instructor_array);
                         
@@ -142,6 +143,25 @@ class umd_api {
             $dept = new Department($intro_array[3], $intro_array[4], $courses, $intro_array[2], $intro_array[7], $intro_array[6]);
             return $dept;
         }
+    }
+    
+    public function get_schedules($requests, $format) {
+        $schedules = array();
+        foreach ($requests as $i => $request) {
+            $year = isset($request->year) ? $request->year : null;
+            $term = isset($request->term) ? $request->term : null;
+            $dept = isset($request->dept) ? $request->dept : null;
+            $sec  = isset($request->sec)  ? $request->sec  : null;;
+            
+            $new_schedule = $this->get_schedule($year, $term, $dept, $sec);
+            if ($format == 'events')
+                $new_schedule = sectionToEvents($new_schedule->courses[0]->sections[0], $new_schedule->courses[0], $i / count($requests));
+            else
+                $new_schedule = array($new_schedule);
+            
+            $schedules = array_merge($schedules, $new_schedule);
+        }
+        return $schedules;
     }
 
     public function get_term() {
