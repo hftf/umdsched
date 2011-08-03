@@ -1,5 +1,8 @@
 $(document).ready(function() {
-    $('#sched1').addTag(document.getElementById('ophir').innerText);
+    $(sample_schedules).each(function(i, v) {
+      $('#sample_schedules').append('<dt>' + v.name + '</dt><dd><a href="#" id="sample_schedule_' + v.id + '">' + v.sched + '</a></dd>');
+    });
+    $('#sched1').addTag(document.getElementById('sample_schedule_Ophir').text);
 
     var $calendar = $('#calendar');
     var id = 10;
@@ -160,7 +163,7 @@ $(document).ready(function() {
         jsonOptions: function($calendar) {
             var activeSched_id = 'sched1';
             var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
-                var components = input.value.split(' ');
+                var components = input.value.split(/\s+/);
                 if (components.length == 2)
                     return { 'dept': components[0], 'sec': components[1] };
             });
@@ -251,6 +254,7 @@ $(document).ready(function() {
         $('<div></div>').html('<textarea cols="34" rows="4">' + $('input[name="sched1[]"][type="hidden"]').map(function(i, input) { return input.value; }).toArray().join(',').replaceList({' ':'&nbsp;',',':', '}) + '</textarea>').dialog({
             title: "Serialize schedule",
             modal: true,
+            width: 330,
         });
     });
     $('#wrap_titles_button').click(function() {
