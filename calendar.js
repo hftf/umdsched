@@ -278,7 +278,7 @@ $(document).ready(function() {
     });
     
     $('#grubber-link').click(function() {
-        $('<div></div>').load('sched-grubber.html #sched-grubber').dialog({ title: "Schedule grubber", width: 690 });
+        $('<div></div>').load('sched-grubber.html #sched-grubber').dialog({ title: "Schedule grubber", width: 690, height: 380 });
         return false;
     });
 

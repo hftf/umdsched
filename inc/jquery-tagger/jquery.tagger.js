@@ -43,7 +43,7 @@
 jQuery(function(){
 	$('.tagger').each(function(i){
 		$(this).data('name', $(this).attr('name'));		
-		var b = $('<button type="button" class="positive" />').html('<img src="add.png" /> Add').addClass('tagAdd')
+		var b = $('<button type="button" class="positive" />').html('<img src="inc/img/silk/add.png" /> Add').addClass('tagAdd')
 			.click(function(){
 				var tagger = $(this).data('tagger');
 				$(tagger).addTag( $(tagger).val() ).val('');
