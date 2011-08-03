@@ -57,6 +57,18 @@ class Instructor {
     }
 }
 
+class Status {
+    var $seats;
+    var $open;
+    var $waitlist;
+    
+    function __construct($seats, $open, $waitlist) {
+        $this->seats = $seats;
+        $this->open = $open;
+        $this->waitlist = $waitlist;
+    }
+}
+
 class Section {
     var $number;
     var $crn;
