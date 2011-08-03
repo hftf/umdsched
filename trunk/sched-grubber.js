@@ -1,10 +1,10 @@
 function parseInput(input) {
-    var output = input.split('\n')
-                      .map(function(a) { return a.split('\t'); })
+    var output = input.split(/\n\s*/)
+                      .map(function(a) { return a.split(/\t\s*/); })
                       .filter(function(a) { return a.length == 4 || a.length == 5; })
                       .map(function(a) { return a.slice(0, 2).join(' '); })
                       .filter(function(s) { return !(s == '' || s.substring(0, 6) == 'Course') })
-                      .join(',');
+                      .join(', ');
     return output;
 }
 
