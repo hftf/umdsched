@@ -11,5 +11,6 @@ CREATE TABLE `waitlist_samples` (
   `waitlist` int(11) NOT NULL,
   `remote_addr` varchar(24) NOT NULL,
   `datetime` datetime NOT NULL,
+  `last_checked` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
