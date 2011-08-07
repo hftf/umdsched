@@ -36,7 +36,7 @@ if (isset($_POST['waitlist-update-button'])) {
     //GROUP BY year, term, dept, course_number, section ORDER BY year, term, dept, course_number, section, datetime DESC';
     $query = 'SELECT a.* FROM waitlist_samples a JOIN (SELECT *, MAX(datetime) AS max_datetime FROM waitlist_samples GROUP BY year,term,dept,course_number,section) b
 ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.course_number AND a.section=b.section WHERE a.year = "' . date('Y') . '" AND a.term = "' . $umd_api->get_term() . '" AND a.datetime=b.max_datetime';
-    if (isset($_GET['all']) && empty($requests))
+    if (isset($_GET['all']) || empty($requests))
         $all = true;
     else
         $query .= ' AND (' . implode(" OR \n", $wheres) . ')';
@@ -49,7 +49,6 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
             $requests[$section['dept']] = array('dept' => $section['dept'], 'sec' => null);
     }
     $schedules = $umd_api->get_schedules(json_decode(json_encode($requests)), 'object');
-    echo 1;
     if (empty($schedules))
         echo 'Error: Invalid information entered.';
     else {
