@@ -7,15 +7,32 @@
 <script type="text/javascript" src="sched-grubber.js"></script>
 <script type="text/javascript" src="inc/jquery-week-calendar/libs/jquery-1.4.4.min.js"></script> 
 <script type="text/javascript" src="inc/jquery-tagger/jquery.tagger.js"></script>
+<script type="text/javascript" src="inc/js/jquery.sparkline.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, normalRangeMin: 0, lineColor: '#000', normalRangeColor: 'hsla(120, 76%, 55%, 0.3)', fillColor: false, enableTagOptions: true, height: 40, width: 70 });
+});
+</script>
+<style type="text/css">
+body { font: 0.8em "lucida grande","lucida sans",sans-serif; }
+.sparkline { display: inline-block; vertical-align: bottom; }
+dd { font-size: 0.8em; margin-bottom: 1em; }
+</style>
 </head>
 <body>
 <?php
 
-if (isset($_POST['waitlist-check-button'])) {
+$inputs = array();
+if (isset($_POST['waitlist-check-button']))
+    $inputs = $_POST['sched1'];
+if (isset($_GET['sched1']) && is_array($_GET['sched1']))
+    $inputs = array_merge($inputs, $_GET['sched1']);
+
+if (!empty($inputs)) {
     $requests = array();
     $wheres = array();
     $valid = false;
-    foreach ($_POST['sched1'] as $request) {
+    foreach ($inputs as $request) {
         preg_match('#^\s*(([A-Z]{4})([^\s]*?))(\s(\d+))?\s*$#si', $request, $request_array);
         if (count($request_array) >= 3) {
             $valid = true;
@@ -52,13 +69,18 @@ if (isset($_POST['waitlist-check-button'])) {
             while ($sample = mysql_fetch_assoc($result)) {
                 $key = $sample['year'] . $sample['term'] . $sample['dept'] . $sample['course_number'] . $sample['section'];
                 if (!isset($sections[$key]))
-                    $sections[$key] = array('section' => $sample, 'samples' => array());
+                    $sections[$key] = array('section' => $sample, 'samples' => array(), 'sparkline' => array());
                 $sections[$key]['samples'][] = $sample;
+                $sections[$key]['sparkline'][] = strtotime($sample['datetime']) . ':' . ($sample['seats'] - $sample['open'] + $sample['waitlist']);
             }
             
             echo '<dl>';
             foreach ($sections as $section_key => $section) {
-                echo '<dt><strong>' .  $section['section']['dept'] . $section['section']['course_number'] . ' ' . $section['section']['section'] . '</strong></dt><dd>';
+                $last_sample = $section['samples'][count($section['samples']) - 1];
+                $section['sparkline'][] = time() . ':' . ($last_sample['seats'] - $last_sample['open'] + $last_sample['waitlist']);
+                $sparkline = implode(',', $section['sparkline']);
+                $url = section2url($section['section']);
+                echo '<dt><strong><a href="' . $url . '">' .  $section['section']['dept'] . $section['section']['course_number'] . ' ' . $section['section']['section'] . '</a></strong> <span class="sparkline" sparknormalRangeMax="' . $section['section']['seats'] . '" values="' . $sparkline . '"></span></dt><dd>';
                 foreach ($section['samples'] as $sample)
                     echo 'At ' . date('d M Y, H:i:s', strtotime($sample['datetime'])) . ' the status of this section was: ' . $sample['status'] . '<br />';
                 echo '</dd>';
@@ -67,6 +89,11 @@ if (isset($_POST['waitlist-check-button'])) {
         }
     }
     echo '<hr />';
+}
+
+function section2url($section) {
+    $base_url = 'http://www.sis.umd.edu/bin/soc?';
+    return $base_url . 'term=' . $section['year'] . $section['term'] . '&crs=' . $section['dept'] . $section['course_number'] . '&sec=' . $section['section'];
 }
 
 ?>
