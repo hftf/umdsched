@@ -1,8 +1,10 @@
 $(document).ready(function() {
     $(sample_schedules).each(function(i, v) {
-      $('#sample_schedules').append('<dt>' + v.name + '</dt><dd><a href="#" id="sample_schedule_' + v.id + '">' + v.sched + '</a></dd>');
+      //$('#sample_schedules').append('<dt>' + v.name + '</dt><dd><a href="#" id="sample_schedule_' + v.id + '">' + v.sched + '</a></dd>');
+      $('#sample_schedules').append($('<li />').append($('<a href="#" id="sample_schedule_' + v.id + '" title="' + v.sched + '">' + v.name + '</a>').data('sched', v.sched)));
     });
-    $('#sched1').addTag(document.getElementById('sample_schedule_Ophir').text);
+    //$('#sched1').addTag(document.getElementById('sample_schedule_Ophir').text);
+    $('#sched1').addTag($('#sample_schedule_Ophir').data('sched'));
 
     var $calendar = $('#calendar');
     var id = 10;
@@ -13,6 +15,7 @@ $(document).ready(function() {
         timeslotsPerHour: 12,
         allowCalEventOverlap: true,
         overlapEventsSeparate: true,
+        allowEventCreation: false,
         timeFormat: 'g:i',
         timeSeparator: ' &ndash; ',
         firstDayOfWeek: 0,
@@ -23,8 +26,8 @@ $(document).ready(function() {
         buttons: false,
         //switchDisplay: {'1 day': 1, '3 next days': 3, 'work week': 5, 'full week': 7},
         title: function(daysToShow) {
-			//return daysToShow == 1 ? '%date%' : '%start% - %end%';
-			return 'My schedule';
+            //return daysToShow == 1 ? '%date%' : '%start% - %end%';
+            return 'My schedule';
         },
         getHeaderDate: function(date) {
             var dayName = this.useShortDayNames ? this.shortDays[date.getDay()] : this.longDays[date.getDay()];
@@ -163,9 +166,9 @@ $(document).ready(function() {
         jsonOptions: function($calendar) {
             var activeSched_id = 'sched1';
             var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
-                var components = input.value.split(/\s+/);
-                if (components.length == 2)
-                    return { 'dept': components[0], 'sec': components[1] };
+                var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
+                if (components && components[1])
+                    return { 'dept': components[1], 'sec': components[3] };
             });
             
             return { 'model': 'course', 'format': 'events', 'data': activeSched_sections };
@@ -277,17 +280,30 @@ $(document).ready(function() {
             }
         }).show();
     });
-    $(".sample_schedules dd a").click(function() {
-        $('#sched1').data('list').find('li').click();
-        $("#sched1").addTag($(this).html());
-        $('#refresh_calendar_button').click();
+    $(".sample_schedules a").click(function() {
+        resetScheduleData($(this).data('sched'));
         return false;
     });
     
     $('#grubber-link').click(function() {
-        $('<div></div>').load('sched-grubber.html #sched-grubber').dialog({ title: "Schedule grubber", width: 690, height: 380 });
+        var $sched_grubber = $('<div id="sched-grubber-dialog"></div>');
+        var parseUpdateButton = $('<button id="sched-parse-update-button""><img src="inc/img/silk/page_white_lightning.png">Parse and update schedule</button>').click(function() {
+            var parsedschedule = parseInput(document.getElementById('sched-input').value);
+            resetScheduleData(parsedschedule);
+            $sched_grubber.dialog("close");
+        });
+        $sched_grubber.load('sched-grubber.html #sched-grubber', function() {
+            $sched_grubber.find('#sched-parse-button').append(' only');
+            $sched_grubber.find('.buttons').append(parseUpdateButton);
+            $sched_grubber.find('li:eq(4)').text('Click the "Parse and update schedule" button.');
+        });
+        $sched_grubber.dialog({ title: "Schedule grubber", width: 690, height: 380 });
         return false;
     });
 
-
+    function resetScheduleData(scheduledata) {
+        $('#sched1').data('list').find('li').click();
+        $("#sched1").addTag(scheduledata);
+        $('#refresh_calendar_button').click();
+    }
 });
