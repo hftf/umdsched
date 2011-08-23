@@ -12,6 +12,14 @@
 <?php
 
 if (isset($_POST['waitlist-update-button'])) {
+    $time_start = microtime(1);
+    $time_prev = $time_start;
+    function since($desc) {
+        global $time_start, $time_prev;
+        $time_now = microtime(1);
+        echo '<p>Since start: ' . number_format($time_now - $time_start, 4) . '; since previous: ' . number_format($time_now - $time_prev, 4) . ' &mdash; ' . $desc . '</p>';
+        $time_prev = $time_now;
+    }
     $requests = array();
     $wheres = array();
     $valid = false;
@@ -24,12 +32,15 @@ if (isset($_POST['waitlist-update-button'])) {
         }
     }
 
+    set_time_limit(69);
     include 'umd-api.php';
     $umd_api = new umd_api;
+    since('After creating API instance');
 
     include "../inc/db.php";
     mysql_select_db("umd_waitlist");
     mysql_query("SET NAMES 'utf8'");
+    since('After selecting database');
 
     $added = array();
     $all = false;
@@ -42,13 +53,17 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
         $query .= ' AND (' . implode(" OR \n", $wheres) . ')';
 
     $result = mysql_query($query);
+    since('After executing select query');
     while ($section = mysql_fetch_assoc($result)) {
         $key = $section['year'] . $section['term'] . $section['dept'] . $section['course_number'] . $section['section'];
         $added[$key] = $section;
         if ($all && !isset($requests[$section['dept']]))
             $requests[$section['dept']] = array('dept' => $section['dept'], 'sec' => null);
     }
+    since('After storing pre-update statuses to local variable');
+    
     $schedules = $umd_api->get_schedules(json_decode(json_encode($requests)), 'object');
+    since('After retrieving requested sections via API');
     if (empty($schedules))
         echo 'Error: Invalid information entered.';
     else {
@@ -56,11 +71,11 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
         $inserts = array();
         $update_query = 'UPDATE waitlist_samples SET last_checked = NOW() WHERE id IN' . "\n";
         $ins = array();
+        $year = date('Y');
+        $term = $umd_api->get_term();
         foreach ($schedules as $dept) {
             foreach ($dept->courses as $course) {
                 foreach ($course->sections as $section) {
-                    $year = date('Y');
-                    $term = $umd_api->get_term();
                     $key = $year . $term . $course->dept . $course->number . $section->number;
                     //echo $added[$key]['id'] . ' ' . $key . '<br />' . $added[$key]['status'] . ' ' . $added[$key]['datetime'] . '<br/>' . $section->status->orig_string . '<br/><br/>';
                     if (!isset($added[$key]) || $section->status->orig_string != $added[$key]['status'])
@@ -70,17 +85,20 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
                 }
             }
         }
+        since('After building insert and update queries');
         if (!empty($inserts)) {
             $insert_query .= implode(",\n", $inserts);
             //echo $insert_query;
             $result = mysql_query($insert_query);
-            echo '<p>' . ((!$result) ? 'Processed insert unsuccessfully.<br />Query: ' . $insert_query . '<br />Error: ' . mysql_error() : 'Inserted waitlist data successfully!') . '</p>';
+            since('After executing insert query');
+            echo '<p>' . ((!$result) ? 'Processed insert unsuccessfully.<br />Query: ' . $insert_query . '<br />Error: ' . mysql_error() : 'Inserted ' . count($inserts) . ' rows of waitlist data successfully!') . '</p>';
         }
         if (!empty($ins)) {
             $update_query .= '(' . implode(', ', $ins) . ')';
             //echo $update_query;
             $result = mysql_query($update_query);
-            echo '<p>' . ((!$result) ? 'Processed update unsuccessfully.<br />Query: ' . $update_query . '<br />Error: ' . mysql_error() : 'Updated waitlist data successfully!') . '</p>';
+            since('After executing update query');
+            echo '<p>' . ((!$result) ? 'Processed update unsuccessfully.<br />Query: ' . $update_query . '<br />Error: ' . mysql_error() : 'Updated ' . count($ins) . ' rows of waitlist data successfully!') . '</p>';
         }
     }
 }
