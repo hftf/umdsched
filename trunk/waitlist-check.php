@@ -10,7 +10,7 @@
 <script type="text/javascript" src="inc/js/jquery.sparkline.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('.sparkline').sparkline('html', { chartRangeMin: 0, normalRangeMin: 0, lineColor: '#000', normalRangeColor: 'hsla(120, 76%, 55%, 0.3)', fillColor: false, enableTagOptions: true, height: 40, width: 70 });
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, normalRangeMin: 0, lineColor: '#000', normalRangeColor: 'hsla(120, 76%, 55%, 0.3)', fillColor: false, enableTagOptions: true, height: 40, width: 40 });
 });
 </script>
 <style type="text/css">
@@ -25,8 +25,12 @@ dd { font-size: 0.8em; margin-bottom: 1em; }
 $inputs = array();
 if (isset($_POST['waitlist-check-button']))
     $inputs = $_POST['sched1'];
-if (isset($_GET['sched1']) && is_array($_GET['sched1']))
-    $inputs = array_merge($inputs, $_GET['sched1']);
+if (isset($_GET['sched1'])) {
+    if (!is_array($_GET['sched1']) && is_string($_GET['sched1']))
+        $_GET['sched1'] = preg_split('#\s*,\s*#', $_GET['sched1']);
+    if (is_array($_GET['sched1']))
+        $inputs = array_merge($inputs, $_GET['sched1']);
+}
 
 if (!empty($inputs)) {
     $requests = array();
