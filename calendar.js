@@ -20,9 +20,10 @@ $(document).ready(function() {
         timeSeparator: ' &ndash; ',
         firstDayOfWeek: 0,
         businessHours: {start: 8, end: 18, limitDisplay: true},
-        minDate: Date.sun(),
-        maxDate: Date.sat(),
-        daysToShow: 7,
+        minDate: Date.mon(),
+        maxDate: Date.fri(),
+        firstDayOfWeek: 1,
+        daysToShow: 5,
         buttons: false,
         //switchDisplay: {'1 day': 1, '3 next days': 3, 'work week': 5, 'full week': 7},
         title: function(daysToShow) {
@@ -168,7 +169,7 @@ $(document).ready(function() {
             var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
                 var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
                 if (components && components[1])
-                    return { 'dept': components[1], 'sec': components[3] };
+                    return { 'dept': components[1], 'sec': components[3], 'year': $('#year_select').val(), 'term': $('#term_select').val() };
             });
             
             return { 'model': 'course', 'format': 'events', 'data': activeSched_sections };
