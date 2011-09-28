@@ -37,7 +37,7 @@ if (isset($_POST['waitlist-update-button'])) {
     $umd_api = new umd_api;
     since('After creating API instance');
 
-    include "../inc/db.php";
+    include "inc/db.php";
     mysql_select_db("umd_waitlist");
     mysql_query("SET NAMES 'utf8'");
     since('After selecting database');
