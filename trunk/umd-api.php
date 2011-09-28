@@ -154,7 +154,7 @@ class umd_api {
             $year = isset($request->year) ? $request->year : null;
             $term = isset($request->term) ? $request->term : null;
             $dept = isset($request->dept) ? $request->dept : null;
-            $sec  = isset($request->sec)  ? $request->sec  : null;;
+            $sec  = isset($request->sec)  ? $request->sec  : null;
             
             $new_schedule = $this->get_schedule($year, $term, $dept, $sec);
             if ($format == 'events')

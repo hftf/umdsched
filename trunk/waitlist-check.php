@@ -10,7 +10,7 @@
 <script type="text/javascript" src="inc/js/jquery.sparkline.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('.sparkline').sparkline('html', { chartRangeMin: 0, normalRangeMin: 0, lineColor: '#000', normalRangeColor: 'hsla(120, 76%, 55%, 0.3)', fillColor: false, enableTagOptions: true, height: 40, width: 40 });
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, normalRangeMin: 0, lineColor: '#000', normalRangeColor: 'hsla(120, 76%, 55%, 0.3)', fillColor: false, enableTagOptions: true, height: 40, width: 80 });
 });
 </script>
 <style type="text/css">
@@ -45,7 +45,7 @@ if (!empty($inputs)) {
         }
     }
 
-    include "../inc/db.php";
+    include "inc/db.php";
     mysql_select_db("umd_waitlist");
     mysql_query("SET NAMES 'utf8'");
 
@@ -76,6 +76,7 @@ if (!empty($inputs)) {
                     $sections[$key] = array('section' => $sample, 'samples' => array(), 'sparkline' => array());
                 $sections[$key]['samples'][] = $sample;
                 $sections[$key]['sparkline'][] = strtotime($sample['datetime']) . ':' . ($sample['seats'] - $sample['open'] + $sample['waitlist']);
+                $sections[$key]['sparkline'][] = strtotime($sample['last_checked']) . ':' . ($sample['seats'] - $sample['open'] + $sample['waitlist']);
             }
             
             echo '<dl>';
@@ -84,10 +85,10 @@ if (!empty($inputs)) {
                 $section['sparkline'][] = time() . ':' . ($last_sample['seats'] - $last_sample['open'] + $last_sample['waitlist']);
                 $sparkline = implode(',', $section['sparkline']);
                 $url = section2url($section['section']);
-                echo '<dt><strong><a href="' . $url . '">' .  $section['section']['dept'] . $section['section']['course_number'] . ' ' . $section['section']['section'] . '</a></strong> <span class="sparkline" sparknormalRangeMax="' . $section['section']['seats'] . '" values="' . $sparkline . '"></span></dt><dd>';
+                echo '<dt><strong><a href="' . $url . '">' .  $section['section']['dept'] . $section['section']['course_number'] . ' ' . $section['section']['section'] . '</a></strong> <span class="sparkline" sparknormalRangeMax="' . $section['section']['seats'] . '" values="' . $sparkline . '"></span></dt><dd><table>';
                 foreach ($section['samples'] as $sample)
-                    echo 'At ' . date('d M Y, H:i:s', strtotime($sample['datetime'])) . ' the status of this section was: ' . $sample['status'] . '<br />';
-                echo '</dd>';
+                    echo '<tr><td>' . $sample['datetime'] . '</td><td>' . $sample['last_checked'] . '</td><td>' . $sample['status'] . '</td></tr>';
+                echo '</table></dd>';
             }
             echo '</dl>';
         }
