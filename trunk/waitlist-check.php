@@ -10,7 +10,8 @@
 <script type="text/javascript" src="inc/js/jquery.sparkline.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('.sparkline').sparkline('html', { chartRangeMin: 0, normalRangeMin: 0, lineColor: '#000', normalRangeColor: 'hsla(120, 76%, 55%, 0.3)', fillColor: false, enableTagOptions: true, height: 40, width: 80 });
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: 'hsla(120, 76%, 55%, 0.5)', fillColor: 'hsla(120, 76%, 55%, 0.3)', spotRadius: false, enableTagOptions: true, tagValuesAttribute: 'sparkcompositeValues', height: 40, width: 80});
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: '#000', fillColor: false, enableTagOptions: true, composite: true });
 });
 </script>
 <style type="text/css">
@@ -73,19 +74,27 @@ if (!empty($inputs)) {
             while ($sample = mysql_fetch_assoc($result)) {
                 $key = $sample['year'] . $sample['term'] . $sample['dept'] . $sample['course_number'] . $sample['section'];
                 if (!isset($sections[$key]))
-                    $sections[$key] = array('section' => $sample, 'samples' => array(), 'sparkline' => array());
+                    $sections[$key] = array('section' => $sample, 'samples' => array(), 'sparkline' => array(), 'ymax' => 0);
                 $sections[$key]['samples'][] = $sample;
-                $sections[$key]['sparkline'][] = strtotime($sample['datetime']) . ':' . ($sample['seats'] - $sample['open'] + $sample['waitlist']);
-                $sections[$key]['sparkline'][] = strtotime($sample['last_checked']) . ':' . ($sample['seats'] - $sample['open'] + $sample['waitlist']);
+                $y = ($sample['seats'] - $sample['open'] + $sample['waitlist']);
+                if ($y > $sections[$key]['ymax'])
+                    $sections[$key]['ymax'] = $y;
+                $sections[$key]['sparkline'][] = strtotime($sample['datetime']) . ':' . $y;
+                $sections[$key]['sparkline'][] = strtotime($sample['last_checked']) . ':' . $y;
+                $sections[$key]['composite'][] = strtotime($sample['datetime']) . ':' . $sample['seats'];
+                $sections[$key]['composite'][] = strtotime($sample['last_checked']) . ':' . $sample['seats'];
             }
             
             echo '<dl>';
             foreach ($sections as $section_key => $section) {
                 $last_sample = $section['samples'][count($section['samples']) - 1];
                 $section['sparkline'][] = time() . ':' . ($last_sample['seats'] - $last_sample['open'] + $last_sample['waitlist']);
+                $section['composite'][] = time() . ':' . $last_sample['seats'];
                 $sparkline = implode(',', $section['sparkline']);
+                $composite = implode(',', $section['composite']);
                 $url = section2url($section['section']);
-                echo '<dt><strong><a href="' . $url . '">' .  $section['section']['dept'] . $section['section']['course_number'] . ' ' . $section['section']['section'] . '</a></strong> <span class="sparkline" sparknormalRangeMax="' . $section['section']['seats'] . '" values="' . $sparkline . '"></span></dt><dd><table>';
+                //sparknormalRangeMax="' . $section['section']['seats'] . '" 
+                echo '<dt><strong><a href="' . $url . '">' .  $section['section']['dept'] . $section['section']['course_number'] . ' ' . $section['section']['section'] . '</a></strong> <span class="sparkline" sparkchartRangeMax="' . $section['ymax'] . '" values="' . $sparkline . '" sparkcompositeValues="' . $composite . '"></span></dt><dd><table>';
                 foreach ($section['samples'] as $sample)
                     echo '<tr><td>' . $sample['datetime'] . '</td><td>' . $sample['last_checked'] . '</td><td>' . $sample['status'] . '</td></tr>';
                 echo '</table></dd>';
