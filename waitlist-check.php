@@ -10,7 +10,7 @@
 <script type="text/javascript" src="inc/js/jquery.sparkline.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: 'hsla(120, 76%, 55%, 0.5)', fillColor: 'hsla(120, 76%, 55%, 0.3)', spotRadius: false, enableTagOptions: true, tagValuesAttribute: 'sparkcompositeValues', height: 40, width: 80});
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: 'hsla(120, 76%, 55%, 0.6)', fillColor: 'hsla(120, 76%, 55%, 0.3)', spotRadius: false, enableTagOptions: true, tagValuesAttribute: 'sparkcompositeValues', height: 40, width: 100});
     $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: '#000', fillColor: false, enableTagOptions: true, composite: true });
 });
 </script>
@@ -77,8 +77,9 @@ if (!empty($inputs)) {
                     $sections[$key] = array('section' => $sample, 'samples' => array(), 'sparkline' => array(), 'ymax' => 0);
                 $sections[$key]['samples'][] = $sample;
                 $y = ($sample['seats'] - $sample['open'] + $sample['waitlist']);
-                if ($y > $sections[$key]['ymax'])
-                    $sections[$key]['ymax'] = $y;
+                $max = max($sample['seats'], $y);
+                if ($max > $sections[$key]['ymax'])
+                    $sections[$key]['ymax'] = $max;
                 $sections[$key]['sparkline'][] = strtotime($sample['datetime']) . ':' . $y;
                 $sections[$key]['sparkline'][] = strtotime($sample['last_checked']) . ':' . $y;
                 $sections[$key]['composite'][] = strtotime($sample['datetime']) . ':' . $sample['seats'];
