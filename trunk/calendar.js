@@ -19,7 +19,7 @@ $(document).ready(function() {
         timeFormat: 'g:i',
         timeSeparator: ' &ndash; ',
         firstDayOfWeek: 0,
-        businessHours: {start: 8, end: 18, limitDisplay: true},
+        businessHours: {start: 8, end: 21, limitDisplay: true},
         minDate: Date.mon(),
         maxDate: Date.fri(),
         firstDayOfWeek: 1,
@@ -169,10 +169,14 @@ $(document).ready(function() {
             var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
                 var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
                 if (components && components[1])
-                    return { 'dept': components[1], 'sec': components[3], 'year': $('#year_select').val(), 'term': $('#term_select').val() };
+                    return { 'dept': components[1], 'sec': components[3] };
+                    //return components[1] + ' ' + components[3];
             });
+            //activeSched_sections = activeSched_sections.join(',');
             
-            return { 'model': 'course', 'format': 'events', 'data': activeSched_sections };
+            var options = { 'model': 'course', 'format': 'events', 'data': activeSched_sections, 'year': $('#year_select').val(), 'term': $('#term_select').val() };
+            //console.log(options);
+            return options;
         },
         data: 'umd-rest.php',
     });

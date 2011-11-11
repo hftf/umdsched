@@ -12,14 +12,14 @@ switch ($request->getMethod()) {
         $request_vars = $request->getRequestVars();
         $model = isset($request_vars['model']) ? $request_vars['model'] : null;
         $format = isset($request_vars['format']) ? $request_vars['format'] : 'object';
+        $year = ($request->getData() && isset($request->getData()->year)) ? $request->getData()->year : null;
+        $term = ($request->getData() && isset($request->getData()->term)) ? $request->getData()->term : null;
         
         switch ($model) {
             case 'course':
-                $data = $umd_api->get_schedules($request->getData(), $format);
+                $data = $umd_api->get_schedules($year, $term, $request->getData(), $format);
                 break;
             case 'dept':
-                $year = ($request->getData() && isset($request->getData()->year)) ? $request->getData()->year : null;
-                $term = ($request->getData() && isset($request->getData()->term)) ? $request->getData()->term : null;
                 $data = $umd_api->get_schedule($year, $term);
                 break;
             default:

@@ -145,14 +145,14 @@ class umd_api {
         }
     }
     
-    public function get_schedules($requests, $format) {
+    public function get_schedules($year, $term, $requests, $format) {
         $schedules = array();
         if (empty($requests))
             return $schedules;
         
         foreach ($requests as $i => $request) {
-            $year = isset($request->year) ? $request->year : null;
-            $term = isset($request->term) ? $request->term : null;
+            $year = isset($request->year) ? $request->year : ($year) ? $year : null;
+            $term = isset($request->term) ? $request->term : ($term) ? $term : null;
             $dept = isset($request->dept) ? $request->dept : null;
             $sec  = isset($request->sec)  ? $request->sec  : null;
             
