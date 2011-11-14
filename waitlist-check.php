@@ -23,6 +23,9 @@ dd { font-size: 0.8em; margin-bottom: 1em; }
 <body>
 <?php
 
+$year = '2012';
+$term = '01';
+
 $inputs = array();
 if (isset($_POST['waitlist-check-button']))
     $inputs = $_POST['sched1'];
@@ -58,11 +61,11 @@ if (!empty($inputs)) {
         if (!$valid && !empty($_POST['sched1'][0]))
             echo 'Error: Invalid information entered.';
         else
-            $query = 'select a.* from waitlist_samples a join (select distinct status, year,term,dept,course_number,section,datetime, count(distinct status) from waitlist_samples group by year,term,dept,course_number,section having count(distinct status)>1) b on a.year=b.year and a.term=b.term and a.dept=b.dept and a.course_number=b.course_number and a.section=b.section order by a.year,a.term,a.dept,a.course_number,a.section,a.datetime';
+            $query = 'select a.* from waitlist_samples a join (select distinct status, year,term,dept,course_number,section,datetime, count(distinct status) from waitlist_samples WHERE year = "' . $year . '" AND term = "' . $term . '" group by year,term,dept,course_number,section having count(distinct status)>1) b on a.year=b.year and a.term=b.term and a.dept=b.dept and a.course_number=b.course_number and a.section=b.section order by a.year,a.term,a.dept,a.course_number,a.section,a.datetime';
     }
     else {
 
-        $query = 'SELECT * FROM waitlist_samples WHERE year = "' . date('Y') . '" AND term = "' . $umd_api->get_term() . '" AND (' . implode(" OR \n", $wheres) . ') ORDER BY year, term, dept, course_number, section, datetime';
+        $query = 'SELECT * FROM waitlist_samples WHERE year = "' . $year . '" AND term = "' . $term . '" AND (' . implode(" OR \n", $wheres) . ') ORDER BY year, term, dept, course_number, section, datetime';
     }
     if ($query) {
         $result = mysql_query($query);
