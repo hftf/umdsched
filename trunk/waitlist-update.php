@@ -11,6 +11,11 @@
 <body>
 <?php
 
+//$year = date('Y');
+//$term = $umd_api->get_term();
+$year = '2012';
+$term = '01';
+
 if (isset($_POST['waitlist-update-button'])) {
     $time_start = microtime(1);
     $time_prev = $time_start;
@@ -46,7 +51,7 @@ if (isset($_POST['waitlist-update-button'])) {
     $all = false;
     //GROUP BY year, term, dept, course_number, section ORDER BY year, term, dept, course_number, section, datetime DESC';
     $query = 'SELECT a.* FROM waitlist_samples a JOIN (SELECT *, MAX(datetime) AS max_datetime FROM waitlist_samples GROUP BY year,term,dept,course_number,section) b
-ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.course_number AND a.section=b.section WHERE a.year = "' . date('Y') . '" AND a.term = "' . $umd_api->get_term() . '" AND a.datetime=b.max_datetime';
+ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.course_number AND a.section=b.section WHERE a.year = "' . $year . '" AND a.term = "' . $term . '" AND a.datetime=b.max_datetime';
     if (isset($_GET['all']) || empty($requests))
         $all = true;
     else
@@ -62,7 +67,7 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
     }
     since('After storing pre-update statuses to local variable');
     
-    $schedules = $umd_api->get_schedules(json_decode(json_encode($requests)), 'object');
+    $schedules = $umd_api->get_schedules($year, $term, json_decode(json_encode($requests)), 'object');
     since('After retrieving requested sections via API');
     if (empty($schedules))
         echo 'Error: Invalid information entered.';
@@ -71,8 +76,6 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
         $inserts = array();
         $update_query = 'UPDATE waitlist_samples SET last_checked = NOW() WHERE id IN' . "\n";
         $ins = array();
-        $year = date('Y');
-        $term = $umd_api->get_term();
         foreach ($schedules as $dept) {
             foreach ($dept->courses as $course) {
                 foreach ($course->sections as $section) {
