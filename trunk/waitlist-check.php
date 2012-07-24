@@ -7,12 +7,36 @@
 <script type="text/javascript" src="sched-grubber.js"></script>
 <script type="text/javascript" src="inc/jquery-week-calendar/libs/jquery-1.4.4.min.js"></script> 
 <script type="text/javascript" src="inc/jquery-tagger/jquery.tagger.js"></script>
-<script type="text/javascript" src="inc/js/jquery.sparkline.js"></script>
+<script type="text/javascript" src="inc/js/jquery.sparkline.2.0.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: 'hsla(120, 76%, 55%, 0.6)', fillColor: 'hsla(120, 76%, 55%, 0.3)', spotRadius: false, enableTagOptions: true, tagValuesAttribute: 'sparkcompositeValues', height: 40, width: 100});
-    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: '#000', fillColor: false, enableTagOptions: true, composite: true });
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: 'hsla(120, 76%, 55%, 0.6)', fillColor: 'hsla(120, 76%, 55%, 0.3)', spotRadius: false, enableTagOptions: true, tagValuesAttribute: 'sparkcompositeValues', height: 40, width: 100,
+      tooltipFormatter: function(sparkline, options, fields) {
+        var d = new Date(fields.x * 1000);
+        dstr = d.toMyISOString();
+        return dstr + '<br /><span style="color: ' + fields.color + '">&#9679; </span>' + (window.lastSeats = fields.y) + ' seats';
+      }
+    });
+    $('.sparkline').sparkline('html', { chartRangeMin: 0, lineColor: '#000', fillColor: false, spotRadius: false /* new */, enableTagOptions: true, composite: true, 
+      tooltipFormatter: function(sparkline, options, fields) {
+        var diff = window.lastSeats - fields.y,
+            open = diff > 0 ? diff : 0;
+            wait = diff < 0 ? -diff : 0;
+        
+        return '<br /><span style="color: ' + fields.color + '">&#9679; </span>' + open + ' open, ' + wait + ' waitlist';
+      }
+    });
 });
+Date.prototype.toMyISOString = function() {
+  function pad(n) { return n < 10 ? '0' + n : n };
+  var d = this;
+  return d.getFullYear() + '-'
+      + pad(d.getMonth() + 1) + '-'
+      + pad(d.getDate()) + ' '
+      + pad(d.getHours()) + ':'
+      + pad(d.getMinutes()) + ':'
+      + pad(d.getSeconds());
+};
 </script>
 <style type="text/css">
 body { font: 0.8em "lucida grande","lucida sans",sans-serif; }
@@ -24,7 +48,7 @@ dd { font-size: 0.8em; margin-bottom: 1em; }
 <?php
 
 $year = '2012';
-$term = '01';
+$term = (isset($_GET['term'])) ? $_GET['term'] : '08';
 
 $inputs = array();
 if (isset($_POST['waitlist-check-button']))
@@ -115,7 +139,7 @@ function section2url($section) {
 }
 
 ?>
-<form id="waitlist-check" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+<form id="waitlist-check" action="<?php echo $_SERVER['PHP_SELF']; ?>?term=<?php echo $term; ?>" method="post">
 <h3>Instructions</h3>
 <ol>
 <li>Enter at least one course (or section), or leave blank to return all sections with changed statuses.</li>
