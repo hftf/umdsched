@@ -19,7 +19,7 @@ $(document).ready(function() {
         timeFormat: 'g:i',
         timeSeparator: ' &ndash; ',
         firstDayOfWeek: 0,
-        businessHours: {start: 8, end: 21, limitDisplay: true},
+        businessHours: {start: 8, end: 22, limitDisplay: true},
         minDate: Date.mon(),
         maxDate: Date.fri(),
         firstDayOfWeek: 1,
@@ -178,7 +178,14 @@ $(document).ready(function() {
             //console.log(options);
             return options;
         },
-        data: 'umd-rest.php',
+        data: 'umd-rest.php', // See line 1151 in jquery.weekcalendar.js for implementation
+        calendarAfterLoad: function(calendar) {
+            var events = calendar.weekCalendar('serializeEvents');
+            var eventEnds = $(events).map(function(i, v) { var d = v.end; return Math.ceil(d.getHours()+d.getMinutes()/60); }).toArray();
+            var lastEventEnd = Math.max.apply(Math, eventEnds);
+            var lastBusinessHour = Math.min(18, lastEventEnd);
+            this.businessHours.end = lastBusinessHour;
+        },
     });
 
     function resetForm($dialogContent) {
