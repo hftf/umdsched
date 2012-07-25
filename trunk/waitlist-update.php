@@ -14,7 +14,7 @@
 //$year = date('Y');
 //$term = $umd_api->get_term();
 $year = '2012';
-$term = '01';
+$term = '08';
 
 if (isset($_POST['waitlist-update-button'])) {
     $time_start = microtime(1);
