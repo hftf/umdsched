@@ -83,3 +83,17 @@
     border:1px solid #d12f19;
     color:#fff;
 }
+/* DOWNLOAD */
+.buttons a.download, button.download{
+    color:#a19719;
+}
+.buttons a.download:hover, button.download:hover{
+    background:#fbf3c4;
+    border:1px solid #ebe2a4;
+    color:#a19719;
+}
+.buttons a.download:active{
+    background-color:#a19719;
+    border:1px solid #a19719;
+    color:#fff;
+}
