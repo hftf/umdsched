@@ -25,6 +25,7 @@
     <script type="text/javascript" src="sample-scheds.js"></script>
     <script type="text/javascript" src="calendar.js"></script>
     <script type="text/javascript" src="sched-grubber.js"></script>
+    <script type="text/javascript" src="vlcoding.js"></script>
 </head>
 <body>
     <!--
@@ -65,12 +66,16 @@
                 <p>Format: <code>DEPT123 0101</code>, where <code>DEPT123</code> is the department code and course number, and <code>0101</code> is the section number. You may enter multiple sections separated by commas.</p>
                 <p><input type="text" class="tagger" name="sched1[]" id="sched1" style="padding: 3px;" /></p>
             </div>
-            <p style="clear: both;" class="buttons nofloat">
+            <div style="clear: both;" class="buttons nofloat">
                 <button id="refresh_calendar_button" class="positive" accesskey="r"><img src="inc/img/silk/arrow_refresh.png" /> <u>R</u>efresh calendar</button>
                 <button id="empty_schedule_button" class="negative" accesskey="e"><img src="inc/img/silk/delete.png" /> <u>E</u>mpty schedule</button>
                 <button id="serialize_schedule_button" accesskey="s"><img src="inc/img/fugue/barcode.png" /> <u>S</u>erialize schedule</button>
+                <form id="export_schedule_form" action="export-ics.php" method="post">
+                  <input type="hidden" name="export_schedule_data" id="export_schedule_data" />
+                  <button id="export_schedule_button" class="download" accesskey="x"><img src="inc/img/silk/date_go.png" /> E<u>x</u>port schedule</button>
+                </form>
                 <input id="wrap_titles_button" type="checkbox" accesskey="w" /> <label for="wrap_titles_button"><u>W</u>rap long course titles</label>
-            </p>
+            </div>
             <h3>Sample schedules</h3>
             <ul id="sample_schedules" class="sample_schedules"></ul>
             <h3>Cool stuff</h3>

@@ -48,4 +48,38 @@ function sectionDesc($meeting, $section, $course) {
     return $str;
 }
 
+
+function sectionTovEvents($section, $course) {
+    $vevents = array();
+
+    if ($section->meetings) {
+        foreach ($section->meetings as $meeting) {
+            $meeting_days = strtoupper(implode(',', explodeDays($meeting->days)));
+            $meeting_events = array(
+              'id'          => $section->crn . '-' . $meeting->days, /**/
+              'tstart'      => date('His', strtotime($meeting->time_start)), /**/
+              'tend'        => date('His', strtotime($meeting->time_end)), /**/
+              
+              'freq'        => 'WEEKLY',
+              'interval'    => 1,
+              'until'       => null, /**/
+              'byday'       => $meeting_days,
+              
+              'summary'     => $course->dept . $course->number . ' – ' . $course->title,
+              'url'         => $course->url,
+              'description' => 'Section: ' . $section->number . ' ' . $meeting->type . "\n" . 'Instructor: ' . $section->instructors[0]->name,
+              'description_altrep' => $section->url,
+              'location'    => $meeting->location->bldg . ' ' . $meeting->location->room,
+              'location_altrep' => $meeting->location->url,
+              
+              // No API support for multiple instructors yet
+              'organizer_cn' => $section->instructors[0]->name,
+              'organizer_url' => $section->instructors[0]->url,
+            );
+            $vevents = array_merge($vevents, $meeting_events);
+        }
+    }
+    return $vevents;
+}
+
 ?>

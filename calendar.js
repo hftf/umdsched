@@ -165,17 +165,9 @@ $(document).ready(function() {
         }
         */
         jsonOptions: function($calendar) {
-            var activeSched_id = 'sched1';
-            var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
-                var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
-                if (components && components[1])
-                    return { 'dept': components[1], 'sec': components[3] };
-                    //return components[1] + ' ' + components[3];
-            });
-            //activeSched_sections = activeSched_sections.join(',');
-            
-            var options = { 'model': 'course', 'format': 'events', 'data': activeSched_sections, 'year': $('#year_select').val(), 'term': $('#term_select').val() };
-            //console.log(options);
+            var options = getJsonOptions();
+            options.model = 'course';
+            options.format = 'events';
             return options;
         },
         data: 'umd-rest.php', // See line 1151 in jquery.weekcalendar.js for implementation
@@ -272,6 +264,11 @@ $(document).ready(function() {
             width: 330,
         });
     });
+    $('#export_schedule_button').click(function() {
+        var options = getJsonOptions();
+        options.format = 'ics';
+        $('#export_schedule_data').val(JSON.stringify(options));
+    });
     $('#wrap_titles_button').click(function() {
         $(document.body).toggleClass('notitlewrap');
     });
@@ -313,6 +310,16 @@ $(document).ready(function() {
         return false;
     });
 
+    function getJsonOptions() {
+      var activeSched_id = 'sched1';
+      var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
+        var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
+        if (components && components[1])
+            return { 'dept': components[1], 'sec': components[3] };
+            //return components[1] + ' ' + components[3];
+      }).toArray();
+      return { 'data': activeSched_sections, 'year': $('#year_select').val(), 'term': $('#term_select').val() };
+    }
     function resetScheduleData(scheduledata) {
         $('#sched1').data('list').find('li').click();
         $("#sched1").addTag(scheduledata);
