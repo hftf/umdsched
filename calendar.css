@@ -129,3 +129,5 @@ ol.formatted li {
 .sample_schedules { padding-left: 1em; -moz-column-width: 5em; -webkit-column-width: 5em; }
 .sample_schedules li { padding-left: 0.5em; text-indent: -0.5em; }
 .wc-title a { text-decoration: underline !important; color: rgba(0, 0, 0, 0.6) !important }
+#serialize_dialog textarea { font: 1.2em monospace; line-height: 1.6; padding: 8px; white-space: pre; }
+.new { text-shadow: -10px 0 20px yellow, 0 0 20px yellow, 10px 0 20px yellow, -10px 0 10px yellow, 0 0 10px yellow, 10px 0 10px yellow; }

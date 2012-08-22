@@ -38,11 +38,11 @@ var multipliers = {                       /*26^4*/
 }
 
 
-function secs2bigInt(sections) {
-  return sections.split(", ").map(sec2bigInt);//.join("|");
+function secs2hash(sections) {
+  return sections.split(/,\s*/).map(sec2hash).join(",");
 }
   
-function sec2bigInt(section, version, debug) {
+function sec2hash(section, version, debug) {
   // (0) Setup
   var encoding_type = 0;
   var multiplicands  = { dept: 0, course_123: 0, course_4: 0, sec: 0 };
@@ -50,7 +50,7 @@ function sec2bigInt(section, version, debug) {
   var product = [0], cum_multiplier = [1];
   
   // (1) Split components into array
-  var sp1 = section.split(/\s/);
+  var sp1 = section.split(/\s+/);
   var sp2 = [sp1[0].substring(0,4), sp1[0].substring(4,7), sp1[0].substring(7), sp1[1]];
   
   // (2a) Determine how to encode sec
@@ -94,7 +94,10 @@ function sec2bigInt(section, version, debug) {
   return encoded_str;
 }
 
-function decode_dcs_new(encoded, debug) {
+function hash2secs(encodeds) {
+  return encodeds.split(',').map(hash2sec).join(', ');
+}
+function hash2sec(encoded, debug) {
   var encoding_type = 0;
   if (encoded.indexOf('-') > -1) {
     encoding_type = +encoded.charAt(0);
@@ -150,7 +153,7 @@ var memoize;
   };
 })();
 function testCache(cache) {
-  var decoding_function = decode_dcs_new;
+  var decoding_function = hash2sec;
   var passed = 0, total = 0;
   
   Object.keys(cache).forEach(function(sec) {
@@ -279,7 +282,7 @@ function prof(n) {
   var failed = [];
   for (var ni = 0; ni < n; ni ++) {
     var r = rands();
-    var s=decode_dcs_new(sec2bigInt(r));
+    var s = hash2sec(sec2bigInt(r));
     if (r !== s)
       failed.push(r);
   }
