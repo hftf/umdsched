@@ -4,7 +4,13 @@ $(document).ready(function() {
       $('#sample_schedules').append($('<li />').append($('<a href="#" id="sample_schedule_' + v.id + '" title="' + v.sched + '">' + v.name + '</a>').data('sched', v.sched)));
     });
     //$('#sched1').addTag(document.getElementById('sample_schedule_Ophir').text);
-    $('#sched1').addTag($('#sample_schedule_Ophir').data('sched'));
+    
+    var urlParams = initUrlParams(), loadSched = $('#sample_schedule_Ophir').data('sched');
+    if (urlParams['s'])
+      loadSched = urlParams['s'];
+    else if (urlParams['v'])
+      loadSched = hash2secs(urlParams['v']);
+    $('#sched1').addTag(loadSched);
 
     var $calendar = $('#calendar');
     var id = 10;
@@ -258,10 +264,13 @@ $(document).ready(function() {
         $('#refresh_calendar_button').click();
     });
     $('#serialize_schedule_button').click(function() {
-        $('<div></div>').html('<textarea cols="34" rows="4">' + $('input[name="sched1[]"][type="hidden"]').map(function(i, input) { return input.value; }).toArray().join(',').replaceList({' ':'&nbsp;',',':', '}) + '</textarea>').dialog({
+        var secs = $('input[name="sched1[]"][type="hidden"]').map(function(i, input) { return input.value; }).toArray().join(', ');
+        var hash = secs2hash(secs), urlv = 'http://ophir.li/umd/calendar.html?v=' + hash;
+        console.log(hash);
+        $('<div id="serialize_dialog"></div>').html('<p><small class="new"><strong>NEW!</strong></small> Copy the URL below to easily share your schedule with friends:</p><textarea cols="45" rows="5">' + urlv + '</textarea><br /><p>Or copy your schedule in a concise comma-separated format:</p><textarea cols="45" rows="5">' + secs + '</textarea>').dialog({
             title: "Serialize schedule",
             modal: true,
-            width: 330,
+            width: 380,
         });
     });
     $('#export_schedule_button').click(function() {
@@ -311,18 +320,32 @@ $(document).ready(function() {
     });
 
     function getJsonOptions() {
-      var activeSched_id = 'sched1';
-      var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
-        var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
-        if (components && components[1])
-            return { 'dept': components[1], 'sec': components[3] };
-            //return components[1] + ' ' + components[3];
-      }).toArray();
-      return { 'data': activeSched_sections, 'year': $('#year_select').val(), 'term': $('#term_select').val() };
+        var activeSched_id = 'sched1';
+        var activeSched_sections = $('input[name="' + activeSched_id + '[]"][type="hidden"]').map(function(i, input) {
+            var components = /\s*([A-Za-z]{4}(\d{3})[A-Za-z]?)\s+([A-Za-z\d]{4})\s*/.exec(input.value);
+            if (components && components[1])
+                return { 'dept': components[1], 'sec': components[3] };
+                //return components[1] + ' ' + components[3];
+        }).toArray();
+        return { 'data': activeSched_sections, 'year': $('#year_select').val(), 'term': $('#term_select').val() };
     }
     function resetScheduleData(scheduledata) {
         $('#sched1').data('list').find('li').click();
         $("#sched1").addTag(scheduledata);
         $('#refresh_calendar_button').click();
     }
+    
+    function initUrlParams() {
+        var urlParams = {},
+            match,
+            pl     = /\+/g,  // Regex for replacing addition symbol with a space
+            search = /([^&=]+)=?([^&]*)/g,
+            decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+            query  = window.location.search.substring(1);
+
+        while (match = search.exec(query))
+            urlParams[decode(match[1])] = decode(match[2]);
+        
+        return urlParams;
+    };
 });

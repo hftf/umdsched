@@ -21,11 +21,12 @@
     <script type="text/javascript" src="inc/jquery-week-calendar/libs/date.js"></script>
     <script type="text/javascript" src="inc/jquery-week-calendar/jquery.weekcalendar.js"></script>
     <script type="text/javascript" src="inc/jquery-tagger/jquery.tagger.js"></script>
+    <script type="text/javascript" src="inc/js/BigInt.js"></script>
     <script type="text/javascript" src="str-utils.js"></script>
     <script type="text/javascript" src="sample-scheds.js"></script>
+    <script type="text/javascript" src="vlcoding3.js"></script>
     <script type="text/javascript" src="calendar.js"></script>
     <script type="text/javascript" src="sched-grubber.js"></script>
-    <script type="text/javascript" src="vlcoding.js"></script>
 </head>
 <body>
     <!--
@@ -58,13 +59,14 @@
             <h3>Instructions</h3>
             <ol class="formatted">
                 <li>Delete the example courses by clicking "Empty schedule" below.</li>
-                <li>Access <a href="http://www.testudo.umd.edu/apps/ssched/">your schedule</a> on Testudo and enter your courses manually, or <span style="background: #FF9; padding: 0 1px;">use the automatic <a id="grubber-link" href="sched-grubber.html">schedule grubber</a>.</span></li>
-                <li>To share your schedule, click "Serialize schedule" and copy the text in the window.</li>
+                <li>Access <a href="http://www.testudo.umd.edu/apps/ssched/">your schedule</a> on Testudo and enter your courses manually, or <!--<span style="background: #FF9; padding: 0 1px;">--><span class="new">use the automatic <a id="grubber-link" href="sched-grubber.html">schedule grubber</a>.</span></li>
+                <li>Click "Serialize schedule" and copy the <span class="new">text or short URL</span> to easily share your schedule with friends.</li>
+                <li>To import your schedule into GCal, click "Export schedule" to download the <abbr title="iCalendar file extension"><code>.ics</code></abbr> file, then <a target="_blank" href="http://support.google.com/calendar/bin/answer.py?hl=en&answer=37118">import the events</a>.</li>
             </ol>
             <div class="edit_schedule">
                 <h3>Edit schedule</h3>
-                <p>Format: <code>DEPT123 0101</code>, where <code>DEPT123</code> is the department code and course number, and <code>0101</code> is the section number. You may enter multiple sections separated by commas.</p>
-                <p><input type="text" class="tagger" name="sched1[]" id="sched1" style="padding: 3px;" /></p>
+                <!--<p>Format: <code>DEPT123 0101</code>, where <code>DEPT123</code> is the department code and course number, and <code>0101</code> is the section number. You may enter multiple sections separated by commas.</p>-->
+                <p><input type="text" class="tagger" name="sched1[]" id="sched1" style="padding: 3px;" title="Format: DEPT123 0101, where DEPT123 is the department code and course number, and 0101 is the section number. You may enter multiple sections separated by commas." /></p>
             </div>
             <div style="clear: both;" class="buttons nofloat">
                 <button id="refresh_calendar_button" class="positive" accesskey="r"><img src="inc/img/silk/arrow_refresh.png" /> <u>R</u>efresh calendar</button>
@@ -72,7 +74,7 @@
                 <button id="serialize_schedule_button" accesskey="s"><img src="inc/img/fugue/barcode.png" /> <u>S</u>erialize schedule</button>
                 <form id="export_schedule_form" action="export-ics.php" method="post">
                   <input type="hidden" name="export_schedule_data" id="export_schedule_data" />
-                  <button id="export_schedule_button" class="download" accesskey="x"><img src="inc/img/silk/date_go.png" /> E<u>x</u>port schedule</button>
+                  <button id="export_schedule_button" class="download" accesskey="x"><img src="inc/img/silk/date_go.png" /> E<u>x</u>port schedule - <small class="new">NEW!</small></button>
                 </form>
                 <input id="wrap_titles_button" type="checkbox" accesskey="w" /> <label for="wrap_titles_button"><u>W</u>rap long course titles</label>
             </div>
@@ -84,6 +86,11 @@
                 <li><a href="sched-grubber.html">Schedule grubber</a></li>
                 <li><a href="umd-examples.php">API entry point</a></li>
                 <li><a href="http://code.google.com/p/umdsched/">Project development</a></li>
+            </ul>
+            <h4>Coming soon&hellip;</h4>
+            <ul>
+                <li>Side-by-side comparison</li>
+                <li><a href="mailto:umdsched@ophir.li">You tell me!</a></li>
             </ul>
         </div>
     </div>
