@@ -74,6 +74,9 @@ foreach ($vevents as $vevent) {
   $vevent_ -> setProperty('ORGANIZER', $vevent['organizer_url'], array('CN' => $vevent['organizer_cn']));
 
   
+  foreach ($vevent['ids'] as $i => $id)
+    if ($id !== $vevent['id'])
+      $vevent_ -> setProperty('RELATED-TO', $id, array('RELTYPE' => 'SIBLING'), $i);
 }
 
 function find_first_day($term_start, $byday) {

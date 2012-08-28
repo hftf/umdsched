@@ -160,7 +160,7 @@ class umd_api {
             if ($format == 'events')
                 $new_schedule = sectionToEvents($new_schedule->courses[0]->sections[0], $new_schedule->courses[0], $i / count($requests));
             else if ($format == 'ics')
-                $new_schedule = array(sectionTovEvents($new_schedule->courses[0]->sections[0], $new_schedule->courses[0]));
+                $new_schedule = sectionTovEvents($new_schedule->courses[0]->sections[0], $new_schedule->courses[0]);
             else
                 $new_schedule = array($new_schedule);
             

@@ -53,10 +53,14 @@ function sectionTovEvents($section, $course) {
     $vevents = array();
 
     if ($section->meetings) {
+        $i = 1;
+        $ids = array();
         foreach ($section->meetings as $meeting) {
+            $id = $section->crn . '.' . $i . '-' . $meeting->days;
+            $ids[$i] = $id;
             $meeting_days = strtoupper(implode(',', explodeDays($meeting->days)));
             $meeting_events = array(
-              'id'          => $section->crn . '-' . $meeting->days, /**/
+              'id'          => $id, /**/
               'tstart'      => date('His', strtotime($meeting->time_start)), /**/
               'tend'        => date('His', strtotime($meeting->time_end)), /**/
               
@@ -75,8 +79,11 @@ function sectionTovEvents($section, $course) {
               // No API support for multiple instructors yet
               'organizer_cn' => $section->instructors[0]->name,
               'organizer_url' => $section->instructors[0]->url,
+              
+              'ids'          => &$ids,
             );
-            $vevents = array_merge($vevents, $meeting_events);
+            $vevents[] = $meeting_events;
+            $i ++;
         }
     }
     return $vevents;
