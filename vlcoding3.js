@@ -25,6 +25,7 @@ var depts = [
 "MEES", "MIEH", "MOCB", "MUED", "MUET", "MUSC", "MUSP", "NACS", "NFSC", "PERS", "PHIL", "PHYS",
 "PLSC", "PORT", "PSYC", "PUAF", "RDEV", "RELS", "RUSS", "SLAA", "SLAV", "SLLC", "SOCY", "SPAN",
 "SPHL", "STAT", "SURV", "TDPS", "THET", "TOXI", "UMEI", "UNIV", "URSP", "USLT", "VMSC", "WMST"
+// "FILM", "TEST"
 ];
 var version = "0-", depts_length = depts.length, add_depts = 0, secs_length = 1e4, add_secs = 0;
 
