@@ -1,20 +1,35 @@
 <?php
 
+include 'inc/php/parallelcurl.php';
 include 'models/models.php';
 include 'str-utils.php';
 
 class umd_api {
+    //configuration settings
+    public static $user_agent = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7';
+    public static $maps_base = 'http://www.umd.edu/CampusMaps/bld_detail.cfm';
+    public static $schedule_base = 'http://www.sis.umd.edu/bin/soc';
+        
     public function __construct() {
-        //configuration settings
-        $this->user_agent = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7';
-        $this->maps_base = 'http://www.umd.edu/CampusMaps/bld_detail.cfm';
-        $this->schedule_base = 'http://www.sis.umd.edu/bin/soc';
+        $this->curl = new ParallelCurl(10); // max number of outstanding fetches
+        $this->curlResults = array();
+    }
+    
+    public static function callback_name($format) {
+        switch ($format) {
+            case 'events': return 'callback_events';
+            case 'ics':    return 'callback_ics';
+            case 'default':
+            case 'object':
+            case '':
+            default:       return '';
+        }
     }
 
     public function get_url($url) {
         //prefer the WP HTTP API to allow for caching and user agent spoofing, fall back if necessary
         if ( function_exists( 'wp_remote_get') )
-            $data = wp_remote_retrieve_body( wp_remote_get($url, array('user-agent' => $this->user_agent) ) );
+            $data = wp_remote_retrieve_body( wp_remote_get($url, array('user-agent' => self::$user_agent) ) );
         else
             $data = file_get_contents($url);
 
@@ -25,9 +40,20 @@ class umd_api {
 
         return $xml;
     }
+    
+    // Where processing_func runs parse_html in its body
+    private function get_url_async($url, $callback, $data) {
+        since('Before requesting '.$data->i);
+        $this->curl->startRequest($url, $callback, $data);
+        since('After requesting '.$data->i);
+    }
 
     public function get_map($category = 'categories') {
-        return $this->get_url($this->maps_base . $category . '.xml');
+        return $this->get_url(self::$maps_base . $category . '.xml');
+    }
+    
+    private static function build_url($year, $term, $dept, $sec) {
+        return self::$schedule_base . '?term=' . $year . $term . '&crs=' . $dept . '&sec=' . $sec;
     }
 
     public function get_schedule($year = null, $term = null, $dept = null, $sec = null) {
@@ -40,9 +66,41 @@ class umd_api {
             $term = $this->get_term();
 
         //form URL and call
-        $url = $this->schedule_base . '?term=' . $year . $term . '&crs=' . $dept . '&sec=' . $sec;
+        $url = $this->build_url($year, $term, $dept, $sec);
         $html = $this->get_url($url);
+        
+        return self::parse_html($html, $dept);
+    }
+    
+    public function get_schedule_async($data, $callback) {
+        $year = $data->year; $term = $data->term; $dept = $data->dept; $sec = $data->sec;
+    
+        //if no year was given, assume the current year
+        if (!$year)
+            $year = date('Y');
 
+        //if no term is given, calculate the current term
+        if (!$term)
+            $term = $this->get_term();
+
+        //form URL and call
+        $url = $this->build_url($year, $term, $dept, $sec);
+        $this->get_url_async($url, $callback, $data);
+    }
+    
+    public function parse_html_async($html, $url, $curl_handle, $data) {
+        since('After returning ' . $data->i);
+        $schedule = self::parse_html($html, $data->dept);
+        since('After parsing ' . $data->i);
+        
+        $callback_name = self::callback_name($data->format);
+        if ($callback_name)
+            call_user_func(array($this, $callback_name), $schedule, $data);
+        else
+            $this->curlResults[$data->i] = $schedule;
+    }
+
+    private function parse_html($html, $dept) {
         if (!$dept) {
             // Extract info from HTML
             $html_start = '<font color=maroon size=+1><b>Departments</b></font><BR><BR><table>';
@@ -87,7 +145,7 @@ class umd_api {
                 $course_intro_html = substr($course_html, 0, $course_intro_end_pos);
                 preg_match('#<b>([A-Z]{4})([^\s]+?) ?</b>.*?\n<b>(.*?);</b>\n<b> ?\((.*?) credits?\)</b>\n#si', $course_intro_html, $course_intro_array);
                 
-                $course_url = $this->schedule_base . '?term=' . $year . $term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
+                $course_url = self::$schedule_base . '?term=' . $year . $term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
                 
                 $section_delimiter = "<dl>"; // "*" appears directly after
                 $section_delimiter_pos = strpos($course_html, $section_delimiter, $course_intro_end_pos);
@@ -146,6 +204,8 @@ class umd_api {
     }
     
     public function get_schedules($year, $term, $requests, $format) {
+        return $this->get_schedules_async($year, $term, $requests, $format);
+        /*
         $schedules = array();
         if (empty($requests))
             return $schedules;
@@ -157,6 +217,7 @@ class umd_api {
             $sec  = isset($request->sec)  ? $request->sec  : null;
             
             $new_schedule = $this->get_schedule($year, $term, $dept, $sec);
+
             if ($format == 'events')
                 $new_schedule = sectionToEvents($new_schedule->courses[0]->sections[0], $new_schedule->courses[0], $i / count($requests));
             else if ($format == 'ics')
@@ -167,9 +228,53 @@ class umd_api {
             $schedules = array_merge($schedules, $new_schedule);
         }
         return $schedules;
+        */
     }
 
-    public function get_term() {
+    public function get_schedules_async($year, $term, $requests, $format = null) {
+        if (empty($requests))
+            return array();
+        
+        $n = count($requests);
+        
+        if (!$year)
+            $year = date('Y');
+        if (!$term)
+            $term = $this->get_term();
+        
+        foreach ($requests as $i => $request) {
+            if (!isset($request->year)) $request->year = ($year) ? $year : null;
+            if (!isset($request->term)) $request->term = ($term) ? $term : null;
+            if (!isset($request->dept)) $request->dept = null;
+            if (!isset($request->sec))  $request->sec  = null;
+            
+            $request->i = $i;
+            $request->n = $n;
+            $request->format = $format;
+            
+            since('Before sending ' . $i);
+            $this->get_schedule_async($request, array($this, 'parse_html_async'));
+            since('After sending ' . $i);
+        }
+        
+        since('Waiting');
+        $this->curl->finishAllRequests();
+        since('Done waiting');
+        
+        return $this->curlResults;
+    }
+    
+    public function callback_events($schedule, $data) {
+        $schedule = sectionToEvents($schedule->courses[0]->sections[0], $schedule->courses[0], $data->i / $data->n);
+        $this->curlResults = array_merge($this->curlResults, $schedule);
+    }
+    public function callback_ics($schedule, $data) {
+        $schedule = sectionTovEvents($schedule->courses[0]->sections[0], $schedule->courses[0]);
+        $this->curlResults = array_merge($this->curlResults, $schedule);
+    }
+    
+
+    public static function get_term() {
         //get the current month as 01-12
         $m = date('m');
 
@@ -180,4 +285,5 @@ class umd_api {
     }
 }
 
+if (!function_exists('since')) {function since(){} }
 ?>
