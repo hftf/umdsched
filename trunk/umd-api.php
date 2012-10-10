@@ -17,12 +17,13 @@ class umd_api {
     
     public static function callback_name($format) {
         switch ($format) {
-            case 'events': return 'callback_events';
-            case 'ics':    return 'callback_ics';
+            case 'events':  return 'callback_events';
+            case 'ics':     return 'callback_ics';
+            case 'credits': return 'callback_credits';
             case 'default':
             case 'object':
             case '':
-            default:       return '';
+            default:        return '';
         }
     }
 
@@ -271,6 +272,10 @@ class umd_api {
     public function callback_ics($schedule, $data) {
         $schedule = sectionTovEvents($schedule->courses[0]->sections[0], $schedule->courses[0]);
         $this->curlResults = array_merge($this->curlResults, $schedule);
+    }
+    public function callback_credits($schedule, $data) {
+        $schedule->data = $data;
+        $this->curlResults[] = $schedule;
     }
     
 
