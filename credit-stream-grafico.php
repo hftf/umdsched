@@ -8,9 +8,29 @@
 <script type="text/javascript" src="inc/jquery-week-calendar/libs/jquery-1.4.4.min.js"></script> 
 <script type="text/javascript" src="inc/jquery-tagger/jquery.tagger.js"></script>-->
 <script type="text/javascript" src="inc/grafico/prototype.js"></script>
-<script type="text/javascript" src="inc/grafico/js/raphael.js"></script>
-<script type="text/javascript" src="inc/grafico/js/grafico.base.js"></script>
-<script type="text/javascript" src="inc/grafico/js/grafico.line.js"></script>
+<script type="text/javascript" src="inc/grafico/raphael.js"></script>
+<script type="text/javascript" src="inc/grafico/grafico.base.js"></script>
+<script type="text/javascript" src="inc/grafico/grafico.line.js"></script>
+<script type="text/javascript">
+grafico_options = {
+    markers: "value",
+    
+    draw_axis: false,
+    grid: true,
+    show_horizontal_labels: true,
+    show_vertical_labels: true,
+    
+    left_padding: 20,
+    //plot_padding :      0,
+    hover_text_color :  "#fff",
+    background_color :  "#fff",
+    
+    
+    stream_line_smoothing: "simple",
+    stream_smart_insertion: true,
+    stream_label_threshold: 0,
+};
+</script>
 </head>
 <body>
 <?php
@@ -22,7 +42,7 @@ $credits = array(
   '201206' => '',
   '201208' => 'PHYS374 0101, PHYS401 0101, PHYS276 0101, CMSC351 0101, CPSP218D 0101, ASTR310 0101',
   '201212' => 'LING240 0101',
-  '201301' => '',
+  '201301' => 'PHYS411 0101, PHYS375 0101, LING311 0101, CMSC330 0204, CPSP239D 0101, ASTR320 0101',
   '201306' => '',
 );
 
@@ -109,11 +129,11 @@ function add_streamgraph_script($dept_credits_) {
     $terms_ = array();
     
     foreach($dept_credits_ as $dept => $terms) {
-        $dept_names[$dept] = $terms['_name'];
+        $dept_names[$dept] = $dept; //$terms['_name'];
         unset($terms['_name']);
         
         if (empty($terms_))
-            $terms_ = array_keys($terms);
+            $terms_ = term_labels(array_keys($terms));
         $dept_credits[$dept] = array_values($terms);
     }
     
@@ -121,34 +141,28 @@ function add_streamgraph_script($dept_credits_) {
     $json_datalabels = json_encode($dept_names);
     $json_labels = json_encode($terms_);
 
-    $str = '<div id="streamgraph" style="width: 600px; height: 400px;"></div>
+    $str = '<div id="streamgraph" style="width: 700px; height: 400px;"></div>
     <script type="text/javascript">
-     Event.observe(window, "load", function() {
-      var streamgraph = new Grafico.StreamGraph(
-        $("streamgraph"),
-        ' . $json_data . ', 
-        { //markers: "value",
-          datalabels: ' . $json_datalabels . ',
-          
-          //draw_axis: false,
-          //grid: true,
-          //labels: ' . $json_labels . ',
-          //show_horizontal_labels: true,
-          //show_vertical_labels: true,
-          
-          //plot_padding :      0,
-          //hover_text_color :  "#fff",
-          //background_color :  "#fff",
-          
-          
-          stream_line_smoothing: "simple",
-          stream_smart_insertion: true,
-          stream_label_threshold: 0,
-        }
-      );
+    Event.observe(window, "load", function() {
+        grafico_options.datalabels = ' . $json_datalabels . ';
+        grafico_options.labels = ' . $json_labels . ';
+        var streamgraph = new Grafico.StackGraph( $("streamgraph"), ' . $json_data . ', grafico_options );
     });
     </script>';
     echo $str;
+}
+function term_labels($year_terms) {
+    foreach ($year_terms as $i => $term)
+        $year_terms[$i] = season(substr($term, 4)) . "\n" . substr($term, 0, 4);
+    return $year_terms;
+}
+function season($term) {
+    switch ($term) {
+        case '01': return 'Spring';
+        case '06': return 'Summer';
+        case '08': return 'Fall';
+        case '12': return 'Winter';
+    }
 }
 
 ?>
