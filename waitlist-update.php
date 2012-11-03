@@ -11,20 +11,33 @@
 <body>
 <?php
 
-//$year = date('Y');
-//$term = $umd_api->get_term();
-$year = '2012';
-$term = '08';
-
 if (isset($_POST['waitlist-update-button'])) {
-    $time_start = microtime(1);
-    $time_prev = $time_start;
-    function since($desc) {
-        global $time_start, $time_prev;
-        $time_now = microtime(1);
-        echo '<p>Since start: ' . number_format($time_now - $time_start, 4) . '; since previous: ' . number_format($time_now - $time_prev, 4) . ' &mdash; ' . $desc . '</p>';
-        $time_prev = $time_now;
-    }
+  $time_start = microtime(1);
+  $time_prev = $time_start;
+  function since($desc) {
+      global $time_start, $time_prev;
+      $time_now = microtime(1);
+      echo '<p>Since start: ' . number_format($time_now - $time_start, 4) . '; since previous: ' . number_format($time_now - $time_prev, 4) . ' &mdash; ' . $desc . '</p>';
+      $time_prev = $time_now;
+  }
+
+  set_time_limit(69);
+  include 'umd-api.php';
+  $umd_api = new umd_api;
+  since('After creating API instance');
+
+  include "inc/db.php";
+  mysql_select_db("umd_waitlist");
+  mysql_query("SET NAMES 'utf8'");
+  since('After selecting database');
+
+
+  $file = fopen('waitlist-current-terms.txt', 'r');
+
+  while (list($year, $term) = fscanf($file, "%s %s")) {
+    since('<b><u>'.$year . $term.'</u></b>');
+
+
     $requests = array();
     $wheres = array();
     $valid = false;
@@ -37,28 +50,21 @@ if (isset($_POST['waitlist-update-button'])) {
         }
     }
 
-    set_time_limit(69);
-    include 'umd-api.php';
-    $umd_api = new umd_api;
-    since('After creating API instance');
 
-    include "inc/db.php";
-    mysql_select_db("umd_waitlist");
-    mysql_query("SET NAMES 'utf8'");
-    since('After selecting database');
 
     $added = array();
     $all = false;
     //GROUP BY year, term, dept, course_number, section ORDER BY year, term, dept, course_number, section, datetime DESC';
-    $query = 'SELECT a.* FROM waitlist_samples a JOIN (SELECT *, MAX(datetime) AS max_datetime FROM waitlist_samples GROUP BY year,term,dept,course_number,section) b
-ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.course_number AND a.section=b.section WHERE a.year = "' . $year . '" AND a.term = "' . $term . '" AND a.datetime=b.max_datetime';
+    $query = 'SELECT a.* FROM waitlist_samples a JOIN (SELECT *, MAX(datetime) AS max_datetime FROM waitlist_samples GROUP BY year,term,dept,course_number,section) b ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.course_number AND a.section=b.section WHERE a.year = "' . $year . '" AND a.term = "' . $term . '" AND a.datetime=b.max_datetime';
+    //$query = 'SELECT a.* FROM waitlist_samples a LEFT OUTER JOIN waitlist_samples b ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.course_number AND a.section=b.section AND b.datetime>a.datetime
+    //          WHERE b.datetime IS NULL AND a.year = "' . $year . '" AND a.term = "' . $term . '"';
     if (isset($_GET['all']) || empty($requests))
         $all = true;
     else
         $query .= ' AND (' . implode(" OR \n", $wheres) . ')';
 
     $result = mysql_query($query);
-    since('After executing select query');
+    since('After executing select query [' . $query . ']');
     while ($section = mysql_fetch_assoc($result)) {
         $key = $section['year'] . $section['term'] . $section['dept'] . $section['course_number'] . $section['section'];
         $added[$key] = $section;
@@ -66,8 +72,8 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
             $requests[$section['dept']] = array('dept' => $section['dept'], 'sec' => null);
     }
     since('After storing pre-update statuses to local variable');
-    
     $schedules = $umd_api->get_schedules($year, $term, json_decode(json_encode($requests)), 'object');
+    
     since('After retrieving requested sections via API');
     if (empty($schedules))
         echo 'Error: Invalid information entered.';
@@ -77,6 +83,7 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
         $update_query = 'UPDATE waitlist_samples SET last_checked = NOW() WHERE id IN' . "\n";
         $ins = array();
         foreach ($schedules as $dept) {
+          if (!empty($dept))
             foreach ($dept->courses as $course) {
                 foreach ($course->sections as $section) {
                     $key = $year . $term . $course->dept . $course->number . $section->number;
@@ -93,21 +100,22 @@ ON a.year=b.year AND a.term=b.term AND a.dept=b.dept AND a.course_number=b.cours
             $insert_query .= implode(",\n", $inserts);
             //echo $insert_query;
             $result = mysql_query($insert_query);
-            since('After executing insert query');
+            since('After executing insert query');// [' . $insert_query . ']');
             echo '<p>' . ((!$result) ? 'Processed insert unsuccessfully.<br />Query: ' . $insert_query . '<br />Error: ' . mysql_error() : 'Inserted ' . count($inserts) . ' rows of waitlist data successfully!') . '</p>';
         }
         if (!empty($ins)) {
             $update_query .= '(' . implode(', ', $ins) . ')';
             //echo $update_query;
             $result = mysql_query($update_query);
-            since('After executing update query');
+            since('After executing update query');// [' . $update_query . ']');
             echo '<p>' . ((!$result) ? 'Processed update unsuccessfully.<br />Query: ' . $update_query . '<br />Error: ' . mysql_error() : 'Updated ' . count($ins) . ' rows of waitlist data successfully!') . '</p>';
         }
     }
+  }
 }
 
 ?>
-<form id="waitlist-update" action="<?php echo $_SERVER['PHP_SELF'] . '?' . $_SERVER['QUERY_STRING']; ?>" method="post">
+<form id="waitlist-update" action="<?php echo $_SERVER['PHP_SELF']; if ($_SERVER['QUERY_STRING']) echo '?' . $_SERVER['QUERY_STRING']; ?>" method="post">
 <h3>Instructions</h3>
 <ol>
 <li>Enter at least one course (or section).</li>
