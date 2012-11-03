@@ -47,7 +47,7 @@ dd { font-size: 0.8em; margin-bottom: 1em; }
 <body>
 <?php
 
-$year = '2012';
+$year = (isset($_GET['year'])) ? $_GET['year'] : '2012';
 $term = (isset($_GET['term'])) ? $_GET['term'] : '08';
 
 $inputs = array();
@@ -139,7 +139,7 @@ function section2url($section) {
 }
 
 ?>
-<form id="waitlist-check" action="<?php echo $_SERVER['PHP_SELF']; ?>?term=<?php echo $term; ?>" method="post">
+<form id="waitlist-check" action="<?php echo $_SERVER['PHP_SELF']; ?>?year=<?php echo $year; ?>&amp;term=<?php echo $term; ?>" method="post">
 <h3>Instructions</h3>
 <ol>
 <li>Enter at least one course (or section), or leave blank to return all sections with changed statuses.</li>
