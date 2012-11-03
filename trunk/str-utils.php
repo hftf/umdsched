@@ -4,7 +4,7 @@ function explodeDays($str) {
     $list = array('M' => 'Mo', 'W' => 'We', 'F' => 'Fr');
     return str_split(strtr($str, $list), 2);
 }
-function sectionToEvents($section, $course, $n = 0) {
+function sectionToEvents($section, $course, $n = 0,  $year, $term) {
     $events = array();
 
     if ($section->meetings) {
@@ -19,7 +19,7 @@ function sectionToEvents($section, $course, $n = 0) {
                     'n'        => $n,
                     'start'    => $meeting_day . ' ' . $meeting->time_start,
                     'end'      => $meeting_day . ' ' . $meeting->time_end,
-                    'title'    => sectionDesc($meeting, $section, $course),
+                    'title'    => sectionDesc($meeting, $section, $course,  $year, $term),
                     'readOnly' => true,
                 );
 
@@ -30,7 +30,7 @@ function sectionToEvents($section, $course, $n = 0) {
 }
 
 
-function sectionDesc($meeting, $section, $course) {
+function sectionDesc($meeting, $section, $course,  $year, $term) {
     $location = $meeting->location->bldg . (($meeting->location->room) ? ' ' . $meeting->location->room : '');
     if ($meeting->location->url)
         $location = '<a href="' . $meeting->location->url . '">' . $location . '</a>';
@@ -41,6 +41,7 @@ function sectionDesc($meeting, $section, $course) {
     if ($section->url)
         $section_ = '<a href="' . $section->url . '">' . $section_ . '</a>';
     $status = ($section->status->open != 0) ? ($section->status->seats - $section->status->open) . '/' . $section->status->seats : 'Full (' . $section->status->waitlist . ')';
+    $status = '<a href="waitlist-check.php?year=' . $year . '&amp;term=' . $term . '&amp;sched1=' . $course->dept . $course->number . '%20' . $section->number . '"><span class="status">' . $status . '</span></a>';
 
     $str = '<span class="course-section">' . $course_ . '&nbsp; <span class="section-num">' . $section_ . (($meeting->type) ? ' <span class="meeting-type">' . $meeting->type . '</span>' : '') . '</span></span><br />' .
            '<abbr class="course-title" title="' . $course->title . '">' . $course->title . '</abbr><br />' . 

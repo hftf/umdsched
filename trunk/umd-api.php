@@ -44,9 +44,9 @@ class umd_api {
     
     // Where processing_func runs parse_html in its body
     private function get_url_async($url, $callback, $data) {
-        since('Before requesting '.$data->i);
+        //since('Before requesting '.$data->i);
         $this->curl->startRequest($url, $callback, $data);
-        since('After requesting '.$data->i);
+        //since('After requesting '.$data->i);
     }
 
     public function get_map($category = 'categories') {
@@ -56,7 +56,7 @@ class umd_api {
     private static function build_url($year, $term, $dept, $sec) {
         return self::$schedule_base . '?term=' . $year . $term . '&crs=' . $dept . '&sec=' . $sec;
     }
-
+    /*
     public function get_schedule($year = null, $term = null, $dept = null, $sec = null) {
         //if no year was given, assume the current year
         if (!$year)
@@ -72,7 +72,7 @@ class umd_api {
         
         return self::parse_html($html, $dept);
     }
-    
+    */
     public function get_schedule_async($data, $callback) {
         $year = $data->year; $term = $data->term; $dept = $data->dept; $sec = $data->sec;
     
@@ -90,9 +90,9 @@ class umd_api {
     }
     
     public function parse_html_async($html, $url, $curl_handle, $data) {
-        since('After returning ' . $data->i);
-        $schedule = self::parse_html($html, $data->dept);
-        since('After parsing ' . $data->i);
+        //since('After returning ' . $data->i);
+        $schedule = self::parse_html($html, $data);
+        //since('After parsing ' . $data->i);
         
         $callback_name = self::callback_name($data->format);
         if ($callback_name)
@@ -101,8 +101,8 @@ class umd_api {
             $this->curlResults[$data->i] = $schedule;
     }
 
-    private function parse_html($html, $dept) {
-        if (!$dept) {
+    private function parse_html($html, $data) {
+        if (!$data->dept) {
             // Extract info from HTML
             $html_start = '<font color=maroon size=+1><b>Departments</b></font><BR><BR><table>';
             $html_start_pos = strpos($html, $html_start) + strlen($html_start);
@@ -146,7 +146,7 @@ class umd_api {
                 $course_intro_html = substr($course_html, 0, $course_intro_end_pos);
                 preg_match('#<b>([A-Z]{4})([^\s]+?) ?</b>.*?\n<b>(.*?);</b>\n<b> ?\((.*?) credits?\)</b>\n#si', $course_intro_html, $course_intro_array);
                 
-                $course_url = self::$schedule_base . '?term=' . $year . $term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
+                $course_url = self::$schedule_base . '?term=' . $data->year . $data->term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
                 
                 $section_delimiter = "<dl>"; // "*" appears directly after
                 $section_delimiter_pos = strpos($course_html, $section_delimiter, $course_intro_end_pos);
@@ -237,6 +237,12 @@ class umd_api {
             return array();
         
         $n = count($requests);
+        $depts = array();
+        foreach ($requests as $i => $request) {
+            $dept = substr($request->dept, 0, 4);
+            if (!isset($depts[$dept]))
+                $depts[$dept] = count($depts);
+        }
         
         if (!$year)
             $year = date('Y');
@@ -253,20 +259,24 @@ class umd_api {
             $request->n = $n;
             $request->format = $format;
             
-            since('Before sending ' . $i);
+            $dept = substr($request->dept, 0, 4);
+            $request->di = $depts[$dept];
+            $request->dn = count($depts);
+            
+            //since('Before sending ' . $i);
             $this->get_schedule_async($request, array($this, 'parse_html_async'));
-            since('After sending ' . $i);
+            //since('After sending ' . $i);
         }
         
-        since('Waiting');
+        //since('Waiting');
         $this->curl->finishAllRequests();
-        since('Done waiting');
+        //since('Done waiting');
         
         return $this->curlResults;
     }
     
     public function callback_events($schedule, $data) {
-        $schedule = sectionToEvents($schedule->courses[0]->sections[0], $schedule->courses[0], $data->i / $data->n);
+        $schedule = sectionToEvents($schedule->courses[0]->sections[0], $schedule->courses[0], $data->di/$data->dn, $data->year, $data->term); //, $data->i / $data->n);
         $this->curlResults = array_merge($this->curlResults, $schedule);
     }
     public function callback_ics($schedule, $data) {
