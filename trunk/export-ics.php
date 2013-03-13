@@ -10,6 +10,10 @@ $terms = array(   // First day of classes, last day of classes
   '201208' => array('start' => '20120829', 'end' => '20121211'),
 //'201212' => array('start' => '20130102', 'end' => '20130122'),
   '201301' => array('start' => '20130123', 'end' => '20130509'),
+//'201306' => 'Dunno',
+  '201308' => array('start' => '20130903', 'end' => '20131213'),
+//'201312' => 'Dunno',
+  '201401' => array('start' => '20140127', 'end' => '20140513')
 );
 $seasons = array('01' => 'Spring', '06' => 'Summer', '08' => 'Fall', '12' => 'Winter');
 $dayabbrs = array('SU' => 'Sun', 'MO' => 'Mon', 'TU' => 'Tue', 'WE' => 'Wed', 'TH' => 'Thu', 'FR' => 'Fri', 'SS' => 'Sat');
@@ -86,11 +90,11 @@ function find_first_day($term_start, $byday) {
   $first_day = '';
   
   foreach ($days as $i => $day) {
-    $ymd = date('Ymd', strtotime('next ' . $dayabbrs[$day], strtotime($term_start)));
+    $ymd = date('Ymd', strtotime('this ' . $dayabbrs[$day], strtotime($term_start)));
     if ($ymd >= $term_start && $ymd < $first_day || $first_day == '')
       $first_day = $ymd;
   }
-      
+  
   return $first_day;
 }
 
