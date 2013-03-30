@@ -6,10 +6,14 @@ $(document).ready(function() {
     //$('#sched1').addTag(document.getElementById('sample_schedule_Ophir').text);
     
     var urlParams = initUrlParams(), loadSched = $('#sample_schedule_Ophir').data('sched');
-    if (urlParams['s'])
+    if (urlParams['s']) // comma-separated sections
       loadSched = urlParams['s'];
-    else if (urlParams['v'])
+    else if (urlParams['v']) // comma-separated encoded sections
       loadSched = hash2secs(urlParams['v']);
+    if (urlParams['y']) // year
+        $('#year_select').val(urlParams['y']);
+    if (urlParams['t']) // term
+        $('#term_select').val(urlParams['t']);
     $('#sched1').addTag(loadSched);
 
     var $calendar = $('#calendar');
@@ -265,7 +269,9 @@ $(document).ready(function() {
     });
     $('#serialize_schedule_button').click(function() {
         var secs = $('input[name="sched1[]"][type="hidden"]').map(function(i, input) { return input.value; }).toArray().join(', ');
-        var hash = secs2hash(secs), urlv = 'http://ophir.li/umd/calendar.html?v=' + hash;
+        var year = $('#year_select').val();
+        var term = $('#term_select').val();
+        var hash = secs2hash(secs), urlv = 'http://ophir.li/umd/calendar.html?y=' + year + '&t=' + term + '&v=' + hash;
         console.log(hash);
         $('<div id="serialize_dialog"></div>').html('<p><small class="new"><strong>NEW!</strong></small> Copy the URL below to easily share your schedule with friends:</p><textarea cols="45" rows="5">' + urlv + '</textarea><br /><p>Or copy your schedule in a concise comma-separated format:</p><textarea cols="45" rows="5">' + secs + '</textarea>').dialog({
             title: "Serialize schedule",
