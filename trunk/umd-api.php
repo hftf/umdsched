@@ -86,6 +86,7 @@ class umd_api {
 
         //form URL and call
         $url = $this->build_url($year, $term, $dept, $sec);
+        echo $url;
         $this->get_url_async($url, $callback, $data);
     }
     
