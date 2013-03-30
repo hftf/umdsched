@@ -223,7 +223,7 @@ function atoi(input, base) {
 }
 
 function encode_dept(dept_str) {
-  var dept = depts.indexOf(dept_str);
+  var dept = depts.indexOf(dept_str.toUpperCase());
   if (dept > -1)
     return dept;
   else
