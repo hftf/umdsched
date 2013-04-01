@@ -1,4 +1,4 @@
-String.prototype.chunk = function(n) {
+/*String.prototype.chunk = function(n) {
     if (typeof n == 'undefined') n = 2;
     return this.match(RegExp('.{1,'+n+'}', 'g'));
 };
@@ -11,8 +11,8 @@ String.prototype.replaceList = function(list) {
 function explodeDays(str) {
     var list = {'M': 'Mo', 'W': 'We', 'F': 'Fr'};
     return str.replaceList(list).chunk(2);
-}
-function sectionToEvents(section, course) {
+}*/
+/*function sectionToEvents(section, course) {
     var events = [];
 
     for (var m = 0; m < section.meetings.length; m ++) {
@@ -32,12 +32,12 @@ function sectionToEvents(section, course) {
         events = events.concat(meeting_events);
     }
     return events;
-}
-function callAPI(dept, sec) {
+}*/
+/*function callAPI(dept, sec) {
     var jqXHR = $.get('umd-rest.php', { model: 'course', format: 'events', data: { 'dept': dept, 'sec': sec }}, function(dept, textStatus, jqXHR) {
         // Assuming only one result
         if (dept != null && !$.isArray(dept)) {
             var events = sectionToEvents(dept.courses[0].sections[0], dept.courses[0]);
         }
     }, 'json');
-}
+}*/
