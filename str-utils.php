@@ -14,8 +14,9 @@ function sectionToEvents($section, $course, $n = 0,  $year, $term) {
 
             foreach ($meeting_days as $meeting_day)
                 $meeting_events[] = array(
-                    'id'       => $section->crn . '-' . $meeting_day,
-                    'crn'      => $section->crn,
+                  //'id'       => $section->crn . '-' . $meeting_day,
+                    'id'       => $course->dept . $course->number . '-' . $section->number . '-' . $meeting_day,
+                  //'crn'      => $section->crn,
                     'n'        => $n,
                     'start'    => $meeting_day . ' ' . $meeting->time_start,
                     'end'      => $meeting_day . ' ' . $meeting->time_end,
@@ -57,7 +58,8 @@ function sectionTovEvents($section, $course) {
         $i = 1;
         $ids = array();
         foreach ($section->meetings as $meeting) {
-            $id = $section->crn . '.' . $i . '-' . $meeting->days;
+            //$id = $section->crn . '.' . $i . '-' . $meeting->days;
+            $id = $course->dept . $course->number . '-' . $section->number . '.' . $i . '-' . $meeting->days;
             $ids[$i] = $id;
             $meeting_days = strtoupper(implode(',', explodeDays($meeting->days)));
             $meeting_events = array(

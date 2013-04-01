@@ -25,7 +25,8 @@ foreach ($departments as $department)
 //$courses = $umdapi->get_schedule('2010','08','hebr');
 
 //Get Course Schedule for current term
-$courses = $umdapi->get_schedule(@$_GET['year'],@$_GET['term'],@$_GET['dept'],@$_GET['sec']);
+$data = (object) array('dept' => @$_GET['dept'], 'sec' => @$_GET['sec']);
+$courses = $umdapi->get_schedules_async(@$_GET['year'], @$_GET['term'], array($data));
 echo'<pre>';print_r($courses);echo'</pre>';
 
 /*
