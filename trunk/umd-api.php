@@ -8,7 +8,8 @@ class umd_api {
     //configuration settings
     public static $user_agent = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7';
     public static $maps_base = 'http://www.umd.edu/CampusMaps/bld_detail.cfm';
-    public static $schedule_base = 'http://www.sis.umd.edu/bin/soc';
+    public static $schedule_base = 'https://ntst.umd.edu/soc/all-courses-search.html';
+    public static $sections_base = 'https://ntst.umd.edu/soc/sections.html';
         
     public function __construct() {
         $this->curl = new ParallelCurl(10); // max number of outstanding fetches
@@ -53,8 +54,8 @@ class umd_api {
         return $this->get_url(self::$maps_base . $category . '.xml');
     }
     
-    private static function build_url($year, $term, $dept, $sec) {
-        return self::$schedule_base . '?term=' . $year . $term . '&crs=' . $dept . '&sec=' . $sec;
+    private static function build_url($year, $term, $dept, $sec,   $sections = false) {
+        return (!$sections ? self::$schedule_base : self::$sections_base) . '?term=' . $year . $term . '&course' . ($sections ? 's' : '') . '=' . $dept . '&section=' . $sec;
     }
     /*
     public function get_schedule($year = null, $term = null, $dept = null, $sec = null) {
@@ -86,7 +87,8 @@ class umd_api {
 
         //form URL and call
         $url = $this->build_url($year, $term, $dept, $sec);
-        echo $url;
+        $data->sections_url = $this->build_url($year, $term, $dept, $sec,   true);
+        
         $this->get_url_async($url, $callback, $data);
     }
     
@@ -102,16 +104,26 @@ class umd_api {
             $this->curlResults[$data->i] = $schedule;
     }
 
+/*    private function xpath_class($simpleXMLElement, $class, $one = true, $text = false) {
+        $array = $simpleXMLElement->xpath('//*[@class="' . $class . '"]');
+        if ($one) {
+            if ($text)
+                return trim($array[0][0]);
+            return $array[0];
+        }
+        return $array;
+    }*/
+
     private function parse_html($html, $data) {
         if (!$data->dept) {
             // Extract info from HTML
-            $html_start = '<font color=maroon size=+1><b>Departments</b></font><BR><BR><table>';
+            $html_start = '<div id="course-prefixes-page" class="row">';
             $html_start_pos = strpos($html, $html_start) + strlen($html_start);
-            $html_end = '</table';
-            $html = substr($html, $html_start_pos , strpos($html, $html_end, $html_start_pos) - $html_start_pos);
+            $html_end = "</div>\r\n\r\n<script>";
+            $html = substr($html, $html_start_pos, strpos($html, $html_end, $html_start_pos) - $html_start_pos);
 
             $depts = array();
-            preg_match_all('#(?<=&crs=[A-Z]{4}>)([A-Z]{4})</a> (.*?)<br>#si', $html, $depts_array);
+            preg_match_all('#(?<=two columns">)([A-Z]{4})</span>\s+<span class="prefix-name nine columns">(.*?)</span>#si', $html, $depts_array);
             for ($i = 0; $i < count($depts_array[0]); $i ++) {
                 $depts[$i] = new Department($depts_array[1][$i], $depts_array[2][$i]);
             }
@@ -120,87 +132,111 @@ class umd_api {
         }
         else {
             // Extract info from HTML
-            $html_start = "</table>\n<hr size=1>\n</center>";
-            $html_start_pos = strpos($html, $html_start) + strlen($html_start);
-            $html_end = "<hr size=1>\n<center>\n<table>";
+            $html_start = '<div id="courses-page" class="row">';
+            $html_start_pos = strpos($html, $html_start);// + strlen($html_start);
+            //$html_end = "</div>\r\n\r\n<script";
+            $html_end = "\r\n\r\n<script";
             $html = substr($html, $html_start_pos , strpos($html, $html_end, $html_start_pos) - $html_start_pos);
+            $html = str_replace('title="Bookstore"', 'title="Bookstore" /', $html); // Invalid XHTML >:(
             
-            if (strpos($html, "' Not Found") > -1 || strpos($html, 'Choose from  a category below:') > -1)
+            if (strpos($html, "No courses matched your search filters above") > -1)
                 return null;
+
+
+            $xml = simplexml_load_string($html);
+
+            $sectiondata_html = self::get_url($data->sections_url);
+            $sectiondata_html = str_replace('title="Bookstore"', 'title="Bookstore" /', $sectiondata_html); // Invalid XHTML >:(
+            $sectiondata_xml = simplexml_load_string($sectiondata_html);
             
-            $intro_end = '</h2>';
-            $intro_end_pos = strpos($html, $intro_end) + strlen($intro_end);
-            $intro_html = substr($html, 0, $intro_end_pos);
-            preg_match('#(<a href = "(.*?)">)?\n<h2>([A-Z]{4}) (.*?)(</a>)? \(\n<a href = "(.*?)">\n(.*?)</a>\)#', $intro_html, $intro_array);
-            
-            $course_delimiter = '<font face="arial,helvetica" size=-1>' . "\n";
-            $courses_start_pos = strpos($html, $course_delimiter, $intro_end_pos) + strlen($course_delimiter);
-            $html = substr($html, $courses_start_pos, strlen($html) - $courses_start_pos);
-            $courses_html = explode($course_delimiter, $html);
-            
+            $course_prefix_xml = $xml->div; //'course-prefix-container'
+            $dept_code = trim($xml->div->div[0]->div->div[0]->span); //'course-prefix-abbr'
+            $dept_name = trim($xml->div->div[0]->div->div[1]->span[0]); //'course-prefix-name'
+            $dept_url = trim($xml->div->div[0]->div->div[1]->span[1]->a['href']); //'course-prefix-link'
+
+            //$courses_xml = $xml->xpath('//*[@class="courses-container"]/*[@class="course"]');
+            $courses_xml = $xml->div->div[1]->div;
             $courses = array();
-            foreach ($courses_html as $course_html) {
-                //echo "<hr>\n[", $course_html, ']';
-                
-                $course_intro_end = "</font>\n<br>\n";
-                $course_intro_end_pos = strpos($course_html, $course_intro_end) + strlen($course_intro_end);
-                $course_intro_html = substr($course_html, 0, $course_intro_end_pos);
-                preg_match('#<b>([A-Z]{4})([^\s]+?) ?</b>.*?\n<b>(.*?);</b>\n<b> ?\((.*?) credits?\)</b>\n#si', $course_intro_html, $course_intro_array);
-                
-                $course_url = self::$schedule_base . '?term=' . $data->year . $data->term . '&crs=' . $course_intro_array[1] . $course_intro_array[2];
-                
-                $section_delimiter = "<dl>"; // "*" appears directly after
-                $section_delimiter_pos = strpos($course_html, $section_delimiter, $course_intro_end_pos);
-                
+            foreach ($courses_xml as $course_html) {
+                $course_id = trim($course_html->div->div[0]->div); //'course-id'
+                preg_match('#^(?P<dept>[A-Z]{4})(?P<number>[^\s]+?)$#', $course_id, $course_id_split);
+                $course_title = trim($course_html->div->div[1]->div->div[0]->div[0]->span); //'course-title'
+                $course_credits = trim($course_html->div->div[1]->div->div[1]->div[0]->div->span[1]); //'course-min-credits'
+
+                // Ignoring grading method, Gen ed and CORE categories
+                // There is also a "course-text" class for things like purchasing books, lab fees;
+                // sometimes it contains the description we expect to find in "approved-course-text"
+                // and it can be fancied up with markup like <hr>
+                //$course_desc = $course_html->xpath('div/div[2]/div[@class="approved-course-texts-container"]/div/div/div[@class="approved-course-text"]');
+                $course_desc = $course_html->div->div[1]->div[1]->xpath('div/div/div');
+                foreach ($course_desc as &$div) $div = trim($div);
+                $course_desc = implode(' ', $course_desc); // implode("\n\n", ...)
+                $course_url = self::$schedule_base . '?term=' . $data->year . $data->term . '&course=' . $course_id_split['dept'] . $course_id_split['number'];
+
+                // Can be <span class="individual-instruction-message">Contact department for information to register for this course.</span>
+                //$sections_xml = $course_html->xpath('div/div[2]/div[4]/div/fieldset//*[@class="sections-container"]//*[@class="section"]');
+                $sections_xml = $sectiondata_xml->div->div->div->div;
                 $sections = array();
-                if ($section_delimiter_pos > -1) {
-                    $sections_start_pos = $section_delimiter_pos + strlen($section_delimiter);
-                    $course_html = substr($course_html, $sections_start_pos, strlen($course_html) - $sections_start_pos);
-                    $sections_html = explode($section_delimiter, $course_html);
-                    
-                    foreach ($sections_html as $section_html) {
-                        $section_intro_end = "Books</a>\n";
-                        $section_intro_end_pos = strpos($section_html, $section_intro_end) + strlen($section_intro_end);
-                        $section_intro_html = substr($section_html, 0, $section_intro_end_pos);
-                        preg_match('#\n(.+)\((.+)\)\n(.*?) \((.*?)\)#si', $section_intro_html, $section_intro_array);
-                        
-                        $section_url = $course_url . '&sec=' . $section_intro_array[1];
-                        preg_match('#(FULL: )?Seats=(\d+), Open=(\d+), Waitlist=(\d+)#si', $section_intro_array[4], $status_array);
-                        $status = new Status($status_array[2], $status_array[3], $status_array[4], $section_intro_array[4]);
-                        // TODO: Add support for multiple instructors
-                        preg_match('#(<a href = "(.*?)">\s*)?(.*?)(</a>)?$#si', $section_intro_array[3], $instructor_array);
-                        
-                        $meeting_delimiter = '<dd>';
-                        $meeting_delimiter_pos = strpos($section_html, $meeting_delimiter, $section_intro_end_pos);
-                        
-                        $meetings = array();
-                        if ($meeting_delimiter_pos > -1) {
-                            $meetings_start_pos = $meeting_delimiter_pos + strlen($meeting_delimiter);
-                            $section_html = substr($section_html, $meetings_start_pos, strlen($section_html) - $meetings_start_pos);
-                            $meetings_html = explode($meeting_delimiter, $section_html);
-                            
-                            foreach ($meetings_html as $meeting_html) {
-                                preg_match('#([A-Za-z]*?)\.*? ?([0-9amp:]{6,7})- ?([0-9amp:]{6,7}) \((.*?)\) ?(.*?)</dd>#', $meeting_html, $meeting_array);
-                                if (!empty($meeting_array)) {
-                                    preg_match('#<a href="(.*?)">([A-Z]+?)</a> (.*?)$#si', $meeting_array[4], $location);
-                                    if (empty($location))
-                                        $location = array(1 => null, $meeting_array[4], null);
-                                    $meeting = new Meeting($meeting_array[1], $meeting_array[2], $meeting_array[3], $location[1], $location[2], $location[3], $meeting_array[5]);
-                                    $meetings[] = $meeting;
-                                }
-                            }
+                foreach ($sections_xml as $section_html) {
+                    $section_id = trim($section_html->div[0]->div->div[0]->span); //'section-id'
+                    // Sadly, they got rid of crn
+
+                    // Can be <span class="section-instructor">Instructor: TBA</span>
+                    // //*[@class="section-instructors"]/*[@class="section-instructor"]
+                    $instructors_arr = $section_html->div[0]->div->div[1]->span->span;
+                    $instructors = array();
+                    foreach ($instructors_arr as $span) {
+                        if ($span->a) { // Not sure if instructor URLs are used anymore, but they are at least still present in older terms
+                            $instructor_name = trim($span->a);
+                            $instructor_url = trim($span->a['href']);
                         }
-                        
-                        $section = new Section($section_intro_array[1], $section_intro_array[2], $status, $section_url, $instructor_array[3], $instructor_array[2], $meetings);
-                        $sections[] = $section;
+                        else {
+                            $instructor_name = trim($span);
+                            $instructor_url = null;
+                        }
+                        $instructors[] = new Instructor($instructor_name, $instructor_url);
                     }
+                    $section_url = $course_url . '&section=' . $section_id; // Not sure about this anymore
+
+                    $seats    = trim($section_html->div[0]->div->div[2]->div->span[1]->span[0]->span[1]); //'total-seats-count'
+                    $open     = trim($section_html->div[0]->div->div[2]->div->span[1]->span[1]->span[1]); //'open-seats-count'
+                    $waitlist = trim($section_html->div[0]->div->div[2]->div->span[1]->span[2]->span[1]); //'waitlist-count'
+                    $status_str = ($open <= 0 ? 'FULL: ' : '') . "Seats=$seats, Open=$open, Waitlist=$waitlist";
+                    $status = new Status($seats, $open, $waitlist, $status_str);
+                    
+                    //xpath('div/div[3]//*[@class="class-days-container"]//*[@class="row"]'); // Don't like the "row" here
+                    $meetings_xml = $section_html->div[1]->div;
+                    $meetings = array();
+                    foreach ($meetings_xml as $meeting_html) {
+                        // Can be <span class="section-days">TBA</span>, in which case the time start and time end are missing
+                        // Can also be <div class="class-message">Contact department or instructor for details</div>
+                        $meeting_days = trim($meeting_html->div[0]->span[0]); //'section-days'
+                        $time_start   = trim($meeting_html->div[0]->span[1]); //'class-start-time'
+                        $time_end     = trim($meeting_html->div[0]->span[2]); //'class-end-time'
+
+                        // This is not always here; can be "Lab" "Discussion"
+                        if ($meeting_html->div[2]) {
+                            $meeting_type = trim($meeting_html->div[2]->span); //'class-type'
+                        }
+
+                        $location_url = trim($meeting_html->div[1]->span->a['href']); //'class-building'
+                        $location_bldg = trim($meeting_html->div[1]->span->a->span); //'building-code'
+                        $location_room = trim($meeting_html->div[1]->span->span); //'class-room'
+
+                        $meeting = new Meeting($meeting_days, $time_start, $time_end, $location_url, $location_bldg, $location_room, $meeting_type);
+                        $meetings[] = $meeting;
+                    }
+                    
+                    $section = new Section($section_id, /*null,*/ $status, $section_url, $instructors, $meetings);
+                    $sections[] = $section;
                 }
 
-                $course = new Course($course_intro_array[1], $course_intro_array[2], str_replace("\n", ' ', $course_intro_array[3]), null, $course_url, $course_intro_array[4], $sections);
+                // note: didn't use course desc before redesign (was null)
+                $course = new Course($course_id_split['dept'], $course_id_split['number'], $course_title, $course_desc, $course_url, $course_credits, $sections);
                 $courses[] = $course;
             }
 
-            $dept = new Department($intro_array[3], $intro_array[4], $courses, $intro_array[2], $intro_array[7], $intro_array[6]);
+            $dept = new Department($dept_code, $dept_name, $courses, $dept_url); //, null, null);
             return $dept;
         }
     }

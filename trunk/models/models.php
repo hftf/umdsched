@@ -14,15 +14,16 @@ class Department {
     var $name;
     var $url;
     var $code;
-    var $college;
+    // var $college;
     
     var $courses;
     
-    function __construct($code, $name, $courses = null, $url = null, $college_name = null, $college_url = null) {
+    function __construct($code, $name, $courses = null, $url = null) { //, $college_name = null, $college_url = null) {
         $this->url = $url;
         $this->code = $code;
         $this->name = $name;
-        $this->college = new College($college_name, $college_url);
+        // Removing this because of redesign
+        // $this->college = new College($college_name, $college_url);
         $this->courses = $courses;
     }
 }
@@ -42,6 +43,7 @@ class Course {
         $this->number = $number;
         $this->title = $title;
         $this->credits = $credits;
+        $this->desc = $desc; // This was missing before
         $this->url = $url;
         $this->sections = $sections;
     }
@@ -73,20 +75,19 @@ class Status {
 
 class Section {
     var $number;
-    var $crn;
+    // var $crn;
     var $status;
     var $url;
     
     var $instructors;
     var $meetings;
     
-    function __construct($number, $crn, $status, $url, $instructor_name, $instructor_url, $meetings = null) {
+    function __construct($number, /*$crn,*/ $status, $url, $instructors, $meetings = null) {
         $this->number = $number;
-        $this->crn = $crn;
+        // $this->crn = $crn;
         $this->status = $status;
         $this->url = $url;
-        // TODO: Add support for multiple instructors
-        $this->instructors = array(new Instructor($instructor_name, $instructor_url));
+        $this->instructors = $instructors; // pass in array(new Instructor($instructor_name, $instructor_url));
         $this->meetings = $meetings;
     }
 }
