@@ -108,7 +108,7 @@ class ParallelCurl {
 
         // Call select to see if anything is waiting for us
         if (curl_multi_select($this->multi_handle, 0.0) === -1)
-            return;
+            ;
         
         // Since something's waiting, give curl a chance to process it
         do {
