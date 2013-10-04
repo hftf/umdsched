@@ -8,14 +8,18 @@ function sectionToEvents($section, $course, $n = 0,  $year, $term) {
     $events = array();
 
     if ($section->meetings) {
+        $i = 1;
         foreach ($section->meetings as $meeting) {
+
+            if ($meeting->days == 'TBA')
+                continue;
             $meeting_days = explodeDays($meeting->days);
             $meeting_events = array();
 
             foreach ($meeting_days as $meeting_day)
                 $meeting_events[] = array(
                   //'id'       => $section->crn . '-' . $meeting_day,
-                    'id'       => $course->dept . $course->number . '-' . $section->number . '-' . $meeting_day,
+                    'id'       => $course->dept . $course->number . '-' . $section->number . '.' . $i . '-' . $meeting_day,
                   //'crn'      => $section->crn,
                     'n'        => $n,
                     'start'    => $meeting_day . ' ' . $meeting->time_start,
@@ -25,6 +29,7 @@ function sectionToEvents($section, $course, $n = 0,  $year, $term) {
                 );
 
             $events = array_merge($events, $meeting_events);
+            $i ++;
         }
     }
     return $events;
@@ -61,6 +66,9 @@ function sectionTovEvents($section, $course) {
             //$id = $section->crn . '.' . $i . '-' . $meeting->days;
             $id = $course->dept . $course->number . '-' . $section->number . '.' . $i . '-' . $meeting->days;
             $ids[$i] = $id;
+
+            if ($meeting->days == 'TBA')
+              continue;
             $meeting_days = strtoupper(implode(',', explodeDays($meeting->days)));
             $meeting_events = array(
               'id'          => $id, /**/
