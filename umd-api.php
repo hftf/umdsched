@@ -4,12 +4,14 @@ include 'inc/php/parallelcurl.php';
 include 'models/models.php';
 include 'str-utils.php';
 
+  $time_start = microtime(1);
+  $time_prev = $time_start;
+
 class umd_api {
     //configuration settings
+    // I'm an iPhone! Wheeeeee
     public static $user_agent = 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7';
-    public static $maps_base = 'http://www.umd.edu/CampusMaps/bld_detail.cfm';
-    public static $schedule_base = 'https://ntst.umd.edu/soc/all-courses-search.html';
-    public static $sections_base = 'https://ntst.umd.edu/soc/sections.html';
+    public static $schedule_base = 'https://ntst.umd.edu/soc/';
         
     public function __construct() {
         $this->curl = new ParallelCurl(10); // max number of outstanding fetches
@@ -29,18 +31,7 @@ class umd_api {
     }
 
     public function get_url($url) {
-        //prefer the WP HTTP API to allow for caching and user agent spoofing, fall back if necessary
-        if ( function_exists( 'wp_remote_get') )
-            $data = wp_remote_retrieve_body( wp_remote_get($url, array('user-agent' => self::$user_agent) ) );
-        else
-            $data = file_get_contents($url);
-
-        return $data;
-
-        //parse the XML into a PHP object
-        $xml = simplexml_load_string($data, 'SimpleXMLElement', LIBXML_NOCDATA);
-
-        return $xml;
+        return file_get_contents($url);
     }
     
     // Where processing_func runs parse_html in its body
@@ -50,12 +41,9 @@ class umd_api {
         //since('After requesting '.$data->i);
     }
 
-    public function get_map($category = 'categories') {
-        return $this->get_url(self::$maps_base . $category . '.xml');
-    }
-    
     private static function build_url($year, $term, $dept, $sec,   $sections = false) {
-        return (!$sections ? self::$schedule_base : self::$sections_base) . '?term=' . $year . $term . '&course' . ($sections ? 's' : '') . '=' . $dept . '&section=' . $sec;
+        $url = self::$schedule_base . 'search?termId=' . $year . $term . '&courseId' . ($sections ? 's' : '') . '=' . strtoupper($dept) . '&sectionId=' . $sec . '&_classDays=on'; // The last part is mysterious; omitting it causes a 500
+        return $url;
     }
     /*
     public function get_schedule($year = null, $term = null, $dept = null, $sec = null) {
@@ -87,8 +75,7 @@ class umd_api {
 
         //form URL and call
         $url = $this->build_url($year, $term, $dept, $sec);
-        $data->sections_url = $this->build_url($year, $term, $dept, $sec,   true);
-        
+        //$data->sections_url = $this->build_url($year, $term, $dept, $sec,   true);
         $this->get_url_async($url, $callback, $data);
     }
     
@@ -138,16 +125,14 @@ class umd_api {
             $html_end = "\r\n\r\n<script";
             $html = substr($html, $html_start_pos , strpos($html, $html_end, $html_start_pos) - $html_start_pos);
             $html = str_replace('title="Bookstore"', 'title="Bookstore" /', $html); // Invalid XHTML >:(
+            $html = preg_replace('#(prefacing-course-text.*?)<P>#', '\1', $html); // Invalid XHTML >:(
+            $html = preg_replace('#& #', '&amp; ', $html); // Invalid XHTML >:(
             
             if (strpos($html, "No courses matched your search filters above") > -1)
                 return null;
 
 
             $xml = simplexml_load_string($html);
-
-            $sectiondata_html = self::get_url($data->sections_url);
-            $sectiondata_html = str_replace('title="Bookstore"', 'title="Bookstore" /', $sectiondata_html); // Invalid XHTML >:(
-            $sectiondata_xml = simplexml_load_string($sectiondata_html);
             
             $course_prefix_xml = $xml->div; //'course-prefix-container'
             $dept_code = trim($xml->div->div[0]->div->div[0]->span); //'course-prefix-abbr'
@@ -155,7 +140,7 @@ class umd_api {
             $dept_url = trim($xml->div->div[0]->div->div[1]->span[1]->a['href']); //'course-prefix-link'
 
             //$courses_xml = $xml->xpath('//*[@class="courses-container"]/*[@class="course"]');
-            $courses_xml = $xml->div->div[1]->div;
+            $courses_xml = $xml->div->div[1]->xpath('div[@class="course"]');
             $courses = array();
             foreach ($courses_xml as $course_html) {
                 $course_id = trim($course_html->div->div[0]->div); //'course-id'
@@ -168,17 +153,24 @@ class umd_api {
                 // sometimes it contains the description we expect to find in "approved-course-text"
                 // and it can be fancied up with markup like <hr>
                 //$course_desc = $course_html->xpath('div/div[2]/div[@class="approved-course-texts-container"]/div/div/div[@class="approved-course-text"]');
-                $course_desc = $course_html->div->div[1]->div[1]->xpath('div/div/div');
-                foreach ($course_desc as &$div) $div = trim($div);
+                //$course_desc = $course_html->div->div[1]->div[1]->xpath('div/div/div');
+                $course_desc = $course_html->xpath('//div[@class="approved-course-text"]');
+                $divs = array();
+                foreach ($course_desc as $div) $divs[] = trim($div);
                 $course_desc = implode(' ', $course_desc); // implode("\n\n", ...)
                 $course_url = self::$schedule_base . '?term=' . $data->year . $data->term . '&course=' . $course_id_split['dept'] . $course_id_split['number'];
 
                 // Can be <span class="individual-instruction-message">Contact department for information to register for this course.</span>
                 //$sections_xml = $course_html->xpath('div/div[2]/div[4]/div/fieldset//*[@class="sections-container"]//*[@class="section"]');
-                $sections_xml = $sectiondata_xml->div->div->div->div;
+                $this_sectiondata_xml = $this->sectiondata_xml->xpath('div[@id="' . $course_id . '"]');
+                $sections_xml = $this_sectiondata_xml[0]->div->div->div;
+                //$sections_xml = $a->div->div->div->div;
                 $sections = array();
                 foreach ($sections_xml as $section_html) {
                     $section_id = trim($section_html->div[0]->div->div[0]->span); //'section-id'
+                    if ($data->sec && $data->sec != $section_id) // Since we can't get only one section from the same endpoint as getting all the sections
+                        continue;
+
                     // Sadly, they got rid of crn
 
                     // Can be <span class="section-instructor">Instructor: TBA</span>
@@ -273,19 +265,14 @@ class umd_api {
         if (empty($requests))
             return array();
         
-        $n = count($requests);
-        $depts = array();
-        foreach ($requests as $i => $request) {
-            $dept = substr($request->dept, 0, 4);
-            if (!isset($depts[$dept]))
-                $depts[$dept] = count($depts);
-        }
-        
         if (!$year)
             $year = date('Y');
         if (!$term)
             $term = $this->get_term();
         
+        $n = count($requests);
+        $depts = array();
+        $sectiondata_url = self::$schedule_base . $year . $term . '/sections?';
         foreach ($requests as $i => $request) {
             if (!isset($request->year)) $request->year = ($year) ? $year : null;
             if (!isset($request->term)) $request->term = ($term) ? $term : null;
@@ -295,6 +282,24 @@ class umd_api {
             $request->i = $i;
             $request->n = $n;
             $request->format = $format;
+
+            $dept = substr($request->dept, 0, 4);
+            if (!isset($depts[$dept]))
+                $depts[$dept] = count($depts);
+
+            $sectiondata_url .= '&courseIds=' . strtoupper($request->dept);
+        }
+
+        //since('Before fetching sectiondata');
+        $sectiondata_html = self::get_url($sectiondata_url);
+
+        //since('After fetching sectiondata');
+        $sectiondata_html = str_replace('title="Bookstore"', 'title="Bookstore" /', $sectiondata_html); // Invalid XHTML >:(
+        $sectiondata_html = str_replace('<hr>', '<hr />', $sectiondata_html); // Invalid XHTML >:(
+        $this->sectiondata_xml = simplexml_load_string($sectiondata_html);
+        //since('After parsing sectiondata');
+        
+        foreach ($requests as $i => $request) {
             
             $dept = substr($request->dept, 0, 4);
             $request->di = $depts[$dept];
@@ -337,5 +342,11 @@ class umd_api {
     }
 }
 
-if (!function_exists('since')) {function since(){} }
+/*if (!function_exists('since')) {function //since($desc) {}}
+if (!function_exists('since')) {function //since($desc) {
+      global $time_start, $time_prev;
+      $time_now = microtime(1);
+      echo '<p>Since start: ' . number_format($time_now - $time_start, 4) . '; since previous: ' . number_format($time_now - $time_prev, 4) . ' &mdash; ' . $desc . '</p>';
+      $time_prev = $time_now;
+  } }*/
 ?>
